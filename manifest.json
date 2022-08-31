@@ -8,7 +8,9 @@
 		"declarativeContent",
 		"activeTab",
 		"webNavigation",
-		"storage"
+		"storage",
+		"unlimitedStorage",
+		"pageCapture"
 	],
 	"background": {
 		"type": "module",

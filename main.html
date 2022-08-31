@@ -974,34 +974,140 @@ there.
       }
     </style>
     <style>
-      .container {
+      html,
+      *,
+      *:before,
+      *:after {
+        box-sizing: border-box;
+      }
+      :root {
+        --main-list-item-bg: #fff;
+      }
+      body {
+        height: 100vh;
         display: flex;
         flex-direction: column;
-        height: 100vh;
+      }
+      #header {
       }
       #main {
+        display: flex;
+        flex: auto;
+      }
+      aside {
+        width: 15%;
+        min-width: 200px;
+      }
+      #editor-wrapper {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        position: relative;
+      }
+      .editor {
         flex: auto;
         border: 1px solid;
-				padding:10px
+        padding: 10px;
+        position: absolute;
+        inset:0;
+        z-index: -1;
+        opacity: 0;
+      }
+      .editor.show{
+        z-index: 1;
+        opacity:1
       }
 
-			[data-theme="dark"]{
-				background-color: #000;
-				color:#fff
-			}
+      [data-theme="dark"] {
+        background-color: #000;
+        color: #fff;
+        --main-list-item-bg: #3586b5;
+      }
 
+      [data-theme="dark"] * {
+        background-color: transparent;
+        color: inherit;
+      }
+
+      [data-theme="dark"] input {
+        background-color: transparent !important;
+        color: inherit !important;
+      }
+
+      ul {
+        list-style-type: none;
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      #main-list {
+      }
+
+      .main-list-item > div {
+        padding: 1rem;
+      }
+      .main-list-item {
+        width: 100%;
+        font-size: 1.5rem;
+        background-color: var(--main-list-item-bg);
+        color: inherit;
+      }
+      .main-list-item ul {
+        margin: 0;
+        padding: 1rem 1.5rem;
+      }
+      #page-buttons-list li input {
+        display: none;
+      }
+
+      #page-buttons-list li.editing button {
+        display: none;
+      }
+      #page-buttons-list li.editing input {
+        display: block;
+      }
     </style>
   </head>
-  <body  data-theme="dark">
-    <div class="container">
-      <div id="main" contenteditable></div>
-
-      <footer style="background-color: #ccc">
-        <a href="https://www.flaticon.com/free-icons/list" title="list icons"
-          >List icons created by Freepik - Flaticon</a
-        >
-      </footer>
+  <body data-theme="dark">
+    <header class="header">dark mode</header>
+    <div id="main">
+      <aside>
+        <ul id="main-list">
+          <li class="main-list-item">
+            <div>Pages</div>
+            <ul id="page-buttons-list">
+              <template>
+                <li class="page-title" data-id="">
+                  <input type="text" value="Page 1" />
+                  <button>Page 1</button>
+                </li>
+              </template>
+              <li><button id="add-page-btn">+ Add Page</button></li>
+            </ul>
+          </li>
+          <li class="main-list-item">
+            <div>Settings</div>
+            <div id="settings">
+              <button style="margin-right: 2rem" id="downloadContent">
+                Download
+              </button>
+              <button>Upload</button>
+            </div>
+          </li>
+          <li></li>
+        </ul>
+      </aside>
+      <div id="editor-wrapper" data-active-page-id="">
+        <template>
+          <div class="editor" data-page-id="" contenteditable></div>
+        </template>
+      </div>
     </div>
+    <footer style="background-color: #ccc">
+      <a href="https://www.flaticon.com/free-icons/list" title="list icons"
+        >List icons created by Freepik - Flaticon</a
+      >
+    </footer>
   </body>
 
   <!-- <script hash="sha256-qznLcsROx4GACP2dm0UCKCzCG+HiZ1guq6ZZDob/Tng=">
@@ -1011,5 +1117,5 @@ there.
 
     document.getElementById("main").addEventListener("change", saveToSync);
   </script> -->
-	<script src="./main.js" type="module"></script>
+  <script src="./main.js" type="module"></script>
 </html>
