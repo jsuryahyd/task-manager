@@ -974,6 +974,11 @@ there.
       }
     </style>
     <style>
+      .ml-auto{
+        margin-left:auto
+      }
+    </style>
+    <style>
       html,
       *,
       *:before,
@@ -988,7 +993,9 @@ there.
         display: flex;
         flex-direction: column;
       }
-      #header {
+      .header {
+        display: flex;
+        padding: 0.5rem;
       }
       #main {
         display: flex;
@@ -1012,10 +1019,13 @@ there.
         inset:0;
         z-index: -1;
         opacity: 0;
+        overflow:auto;
+        height:50px;
       }
       .editor.show{
         z-index: 1;
-        opacity:1
+        opacity:1;
+        height: auto;
       }
 
       [data-theme="dark"] {
@@ -1027,6 +1037,17 @@ there.
       [data-theme="dark"] * {
         background-color: transparent;
         color: inherit;
+      }
+      #light-mode-toggle{
+        display:none
+      }
+
+      [data-theme="dark"] #dark-mode-toggle {
+        display: none;
+      }
+
+      [data-theme="dark"] #light-mode-toggle {
+        display: block;
       }
 
       [data-theme="dark"] input {
@@ -1069,7 +1090,13 @@ there.
     </style>
   </head>
   <body data-theme="dark">
-    <header class="header">dark mode</header>
+    <header class="header">
+<div class="ml-auto">
+  <button id="dark-mode-toggle">dark mode</button>
+<button id="light-mode-toggle">Light mode</button>
+</div>
+
+    </header>
     <div id="main">
       <aside>
         <ul id="main-list">

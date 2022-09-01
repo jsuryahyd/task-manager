@@ -67,6 +67,9 @@ document.addEventListener("DOMContentLoaded", () => {
   //get all pages
   reconcilePages();
 
+  document.getElementById('dark-mode-toggle').addEventListener('click',()=>document.body.setAttribute('data-theme','dark'))
+  document.getElementById('light-mode-toggle').addEventListener('click',()=>document.body.setAttribute('data-theme','light'))
+
   // blur keyup paste
 
   document
