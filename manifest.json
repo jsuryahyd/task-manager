@@ -10,7 +10,9 @@
 		"webNavigation",
 		"storage",
 		"unlimitedStorage",
-		"pageCapture"
+		"pageCapture",
+		"alarms",
+		"notifications"
 	],
 	"background": {
 		"type": "module",
@@ -21,6 +23,6 @@
 	},
 	"action": {},
 	"icons": {
-		"128": "list.png"
+		"128": "assets/list.png"
 	}
 }

@@ -974,8 +974,8 @@ there.
       }
     </style>
     <style>
-      .ml-auto{
-        margin-left:auto
+      .ml-auto {
+        margin-left: auto;
       }
     </style>
     <style>
@@ -1005,26 +1005,44 @@ there.
         width: 15%;
         min-width: 200px;
       }
+      #route-outlet {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        position: relative;
+      }
+      #route-outlet .page-style {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      #route-outlet .page-style.show {
+        opacity: 1;
+        pointer-events: all;
+      }
       #editor-wrapper {
         display: flex;
         flex-direction: column;
         flex: 1;
         position: relative;
       }
+
       .editor {
         flex: auto;
         border: 1px solid;
         padding: 10px;
         position: absolute;
-        inset:0;
+        inset: 0;
         z-index: -1;
         opacity: 0;
-        overflow:auto;
-        height:50px;
+        overflow: auto;
+        height: 50px;
       }
-      .editor.show{
+      .editor.show {
         z-index: 1;
-        opacity:1;
+        opacity: 1;
         height: auto;
       }
 
@@ -1038,8 +1056,8 @@ there.
         background-color: transparent;
         color: inherit;
       }
-      #light-mode-toggle{
-        display:none
+      #light-mode-toggle {
+        display: none;
       }
 
       [data-theme="dark"] #dark-mode-toggle {
@@ -1087,15 +1105,41 @@ there.
       #page-buttons-list li.editing input {
         display: block;
       }
+
+      .page-title .delete-page-btn {
+        width: 100%;
+        padding: 0.5rem;
+      }
+      .page-title .delete-page-btn img {
+        max-height: 100%;
+        width: auto;
+      }
+
+      #alarms-page {
+        background-color: inherit;
+      }
+
+      #isRecurring--true:checked ~ #at-picker{
+        display:none
+      }
+      #isRecurring--false:checked ~ #series-picker{
+        display:none
+      }
+
+      input[type='radio']+label{
+        display: inline;
+      }
+      #alarm-dialog::backdrop{
+        background-color: rgba(0,0,0,0.7);
+      }
     </style>
   </head>
   <body data-theme="dark">
     <header class="header">
-<div class="ml-auto">
-  <button id="dark-mode-toggle">dark mode</button>
-<button id="light-mode-toggle">Light mode</button>
-</div>
-
+      <div class="ml-auto">
+        <button id="dark-mode-toggle">dark mode</button>
+        <button id="light-mode-toggle">Light mode</button>
+      </div>
     </header>
     <div id="main">
       <aside>
@@ -1119,22 +1163,96 @@ there.
                 Download
               </button>
               <button>Upload</button>
+              <button id="alarms-page-goto" data-route-goto="alarms">
+                Alarms
+              </button>
             </div>
           </li>
           <li></li>
         </ul>
       </aside>
-      <div id="editor-wrapper" data-active-page-id="">
-        <template>
-          <div class="editor" data-page-id="" contenteditable></div>
-        </template>
+      <div id="route-outlet">
+        <div
+          id="editor-wrapper"
+          data-active-page-id=""
+          data-route="active-editors"
+        >
+          <template>
+            <div class="editor" data-page-id="" contenteditable></div>
+          </template>
+        </div>
+
+        <div id="alarms-page" data-route="alarms">
+          <button class="ml-auto" id="add-alarm-btn">Add Alarm</button>
+          <div id="oneOff-alarms-list"></div>
+          <div id="recurring-alarms-list"></div>
+        </div>
       </div>
     </div>
     <footer style="background-color: #ccc">
-      <a href="https://www.flaticon.com/free-icons/list" title="list icons"
-        >List icons created by Freepik - Flaticon</a
-      >
+      <div class="row">
+        <!-- <div class="columns">
+        </div> -->
+        <div class="columns">
+          <a href="https://www.flaticon.com/free-icons/list" title="list icons"
+            >List icons created by Freepik - Flaticon</a
+          >
+          Sound Effect by
+          <a
+            href="https://pixabay.com/users/microsammy-22905943/?utm_source=link-attribution&amp;utm_medium=referral&amp;utm_campaign=music&amp;utm_content=8761"
+            >Microsammy</a
+          >
+          from
+          <a
+            href="https://pixabay.com/sound-effects//?utm_source=link-attribution&amp;utm_medium=referral&amp;utm_campaign=music&amp;utm_content=8761"
+            >Pixabay</a
+          >
+          Sound Effect by
+          <a
+            href="https://pixabay.com/users/lesiakower-25701529/?utm_source=link-attribution&amp;utm_medium=referral&amp;utm_campaign=music&amp;utm_content=113180"
+            >Lesiakower</a
+          >
+          from
+          <a
+            href="https://pixabay.com/sound-effects//?utm_source=link-attribution&amp;utm_medium=referral&amp;utm_campaign=music&amp;utm_content=113180"
+            >Pixabay</a
+          >
+        </div>
+      </div>
     </footer>
+
+    <dialog id="alarm-dialog">
+      <form method="dialog" id="alarm-form">
+        <input type="text" name="name" placeholder="Enter name of alarm" />
+        <br />
+        <input type="radio" value="0" id="isRecurring--false" name="isRecurring" checked />
+        <label for="isRecurring--false">
+          One Time Alarm
+        </label>
+        <input id="isRecurring--true" type="radio" value="1" name="isRecurring" style="margin-left:5rem" />
+        <label for="isRecurring--true">
+        Recurring Alarm
+        </label>
+    
+<br />
+        <label id="at-picker">
+          Alarm at
+          <input type="datetime-local" name="alarm-at" />
+        </label>
+
+        <label id="series-picker">
+          Alarm recurring at
+          <input type="time" name="alarm-series-at" />
+        </label>
+<br />
+        <label for="alarm-notes-entry">Notes</label>
+        <textarea id="alarm-notes-entry" placeholder="Enter notes" name="notes" style="width: 100%;"> </textarea>
+<br />
+
+        <button  value="cancel" id="cancel-alarm-form">Cancel</button>
+        <button  value="default" >Submit</button>
+      </form>
+    </dialog>
   </body>
 
   <!-- <script hash="sha256-qznLcsROx4GACP2dm0UCKCzCG+HiZ1guq6ZZDob/Tng=">

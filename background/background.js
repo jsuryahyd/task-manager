@@ -10,6 +10,10 @@ chrome.runtime.onInstalled.addListener(async () => {
 });
 
 chrome.action.onClicked.addListener((tab) => {
+  showExtensionPage();
+});
+
+function showExtensionPage() {
   chrome.tabs.query(
     { url: chrome.runtime.getURL("main.html") },
     async (tabs) => {
@@ -25,4 +29,24 @@ chrome.action.onClicked.addListener((tab) => {
       }
     }
   );
+}
+chrome.alarms.clearAll(() => {});
+chrome.alarms.onAlarm.addListener(async (alarmInfo) => {
+  const alarmNotes =
+    (await appUtils.loadFromLocal(["alarmNotes"])).alarmNotes || {};
+  const notificationDetails = {
+    type: "basic",
+    title: alarmInfo.name,
+    message: "Pop Pop!!!",
+    iconUrl: chrome.runtime.getURL("../assets/list.png"),
+  };
+  if (alarmNotes[alarmInfo.name]) {
+    alarmInfo.name.split("__")[0] &&
+      (notificationDetails.title = alarmInfo.name.split("__")[0]);
+    notificationDetails.message = alarmNotes[alarmInfo.name].notes;
+  }
+  // showExtensionPage();
+  chrome.notifications.create("", notificationDetails, (notificationId) => {
+    console.log(notificationId);
+  });
 });

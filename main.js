@@ -1,5 +1,7 @@
 //global document
+///<reference path="./chrome.d.ts" />
 import { appUtils } from "./lib/utils.js";
+import { appNavigator } from "./Navigator.js";
 async function saveToSync(e) {
   console.log(e);
 
@@ -64,11 +66,20 @@ async function saveToSync(e) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  appNavigator.init();
   //get all pages
   reconcilePages();
 
-  document.getElementById('dark-mode-toggle').addEventListener('click',()=>document.body.setAttribute('data-theme','dark'))
-  document.getElementById('light-mode-toggle').addEventListener('click',()=>document.body.setAttribute('data-theme','light'))
+  document
+    .getElementById("dark-mode-toggle")
+    .addEventListener("click", () =>
+      document.body.setAttribute("data-theme", "dark")
+    );
+  document
+    .getElementById("light-mode-toggle")
+    .addEventListener("click", () =>
+      document.body.setAttribute("data-theme", "light")
+    );
 
   // blur keyup paste
 
@@ -77,6 +88,79 @@ document.addEventListener("DOMContentLoaded", () => {
     ?.addEventListener("click", downloadContent);
 
   document.getElementById("add-page-btn")?.addEventListener("click", addPage);
+
+  showAlarms();
+  const alarmFormDialog = document.getElementById("alarm-dialog");
+  document.getElementById("add-alarm-btn")?.addEventListener("click", () => {
+    alarmFormDialog?.showModal?.();
+  });
+  alarmFormDialog?.addEventListener("close", async (e) => {
+    console.log(e.target.returnValue);
+    if (e.target.returnValue === "default") {
+      const formData = new FormData(e.target.firstElementChild);
+      const formValues = {};
+      for (let [name, value] of formData) {
+        formValues[name] = value;
+      }
+      e.target.firstElementChild.reset();
+      if (!formValues["alarm-at"] && !formValues["alarm-series-at"]) {
+        e.preventDefault();
+        alert("enter time");
+      }
+
+      const alarmId = formValues.name + "__" + Date.now();
+
+      const alarmNotes =
+        (await appUtils.loadFromLocal(["alarmNotes"])).alarmNotes || {};
+      appUtils.saveToLocal({
+        alarmNotes: { ...alarmNotes, [alarmId]: { ...formValues } },
+      });
+
+      if (formValues["alarm-at"]) {
+        chrome.alarms.create(alarmId, {
+          when: new Date(formValues["alarm-at"]).getTime(),
+        });
+      } else if (formValues["alarm-series-at"]) {
+        const [hrs, mins] = formValues["alarm-series-at"].split(":");
+        const todayAtGivenTime = new Date();
+        todayAtGivenTime.setHours(hrs);
+        todayAtGivenTime.setMinutes(mins);
+        const firstOccurence = (
+          appUtils.minutesOfDay(new Date()) >
+          appUtils.minutesOfDay(todayAtGivenTime)
+            ? todayAtGivenTime.setDate(new Date().getDate() + 1)
+            : todayAtGivenTime
+        ).getTime();
+        chrome.alarms.create(alarmId, {
+          periodInMinutes: 1440, //delay since the first alarm
+          when: firstOccurence, //first alarm
+        });
+      }
+
+      showAlarms();
+    }
+  });
+  document.body.addEventListener("click", (e) => {
+    const deleteAlarmId = e.target.getAttribute("data-delete-alarm");
+    if (deleteAlarmId) {
+      chrome.alarms.clear(deleteAlarmId);
+      showAlarms()
+    }
+  });
+  // document.getElementById("alarm-form").onsubmit = (e) => {
+  //   e.preventDefault();
+  //   const formData = new FormData(e.target);
+  //   for (let [name, value] of formData) {
+  //     console.log(name, value);
+  //   }
+  //   alarmFormDialog?.close?.();
+  // };
+
+  // document
+  //   .getElementById("cancel-alarm-form")
+  //   ?.addEventListener("click", () => {
+  //     alarmFormDialog?.close?.();
+  //   });
 });
 
 async function downloadContent() {
@@ -116,17 +200,35 @@ async function addPage() {
   const pages = (await appUtils.loadFromLocal(["pages"]))?.pages || [];
   await appUtils.saveToLocal({ pages: [...pages, { id, title }] });
   reconcilePages({ newPage: true });
+
+  showPage(id);
 }
 
 async function reconcilePages(options = {}) {
   const { newPage } = options;
 
   const pages = (await appUtils.loadFromLocal(["pages"]))?.pages || [];
+
   const editorWrapper = document.getElementById("editor-wrapper");
   const buttonsList = document.getElementById("page-buttons-list");
-
+  let firstPageIdx = true;
   pages.sort().forEach((p, idx) => {
-    if (document.querySelector('.editor[data-page-id="' + p.id + '"]')) {
+    const existingEditor = document.querySelector(
+      '.editor[data-page-id="' + p.id + '"]'
+    );
+    const existingButton = document.querySelector(
+      '.page-title[data-id="' + p.id + '"]'
+    );
+    if (p.deletedOn) {
+      if (existingEditor)
+        existingEditor.parentElement?.removeChild(existingEditor);
+      if (existingButton)
+        existingButton.parentElement?.removeChild(existingButton);
+
+      return;
+    }
+
+    if (existingEditor) {
       return;
     }
     const editor = document.createElement("div");
@@ -142,8 +244,12 @@ async function reconcilePages(options = {}) {
         return console.log("no content with id", ["page--" + p.id], pageObj);
       editor.innerHTML = pageDetails.content || "";
     });
-    if (!document.querySelector('.page-title[data-id="' + p + '"]')) {
+    if (!existingButton) {
       addButton(p, buttonsList, newPage);
+    }
+    if (newPage || firstPageIdx) {
+      showPage(p.id);
+      firstPageIdx = false;
     }
   });
 
@@ -164,7 +270,21 @@ function addButton({ id, title }, parentEl, isEditing) {
   const input = document.createElement("input");
   input.type = "text";
   input.value = title;
-  li.appendChild(input);
+  li.innerHTML = `<div class='row'>
+  <div class="nine columns" >
+  
+  </div>
+  <div class="three columns"></div>
+  </div>`;
+  const deleteBtn = document.createElement("button");
+  deleteBtn.classList.add("delete-page-btn");
+  deleteBtn.innerHTML = `<img src="assets/delete.png" />`;
+  deleteBtn.onclick = (e) =>
+    deletePage(e.target?.closest("li")?.getAttribute("data-id"));
+  li.firstElementChild?.firstElementChild?.nextElementSibling?.appendChild(
+    deleteBtn
+  );
+  li.firstElementChild?.firstElementChild?.appendChild(input);
   input.onblur = onChangeComplete;
 
   async function onChangeComplete(e) {
@@ -185,16 +305,20 @@ function addButton({ id, title }, parentEl, isEditing) {
 
   const button = document.createElement("button");
   button.textContent = title;
-  li.appendChild(button);
+  li.firstElementChild?.firstElementChild?.appendChild(button);
   button.ondblclick = (e) => li.classList.add("editing");
   button.onclick = function (e) {
-    showPage(e.target?.parentElement?.getAttribute("data-id"));
+    showPage(e.target?.closest("li")?.getAttribute("data-id"));
   };
+
+  button.setAttribute("data-route-goto", "active-editors");
 
   input.onchange = (e) => {
     button.textContent = e.target.value;
   };
-  showPage(id);
+  requestAnimationFrame(() => {
+    input.focus();
+  });
 }
 
 function showPage(id) {
@@ -208,4 +332,69 @@ function showPage(id) {
   document
     .querySelector('.editor[data-page-id="' + id + '"]')
     ?.classList.add("show");
+}
+
+const toastService = {
+  show: alert,
+};
+
+async function deletePage(id) {
+  const pages = (await appUtils.loadFromLocal(["pages"]))?.pages || [];
+  const pageToBeDeleted = pages.find((p) => p.id === +id);
+  if (!pageToBeDeleted) return toastService.show("no such page");
+  pageToBeDeleted.deletedOn = Date.now();
+
+  await appUtils.saveToLocal({ pages });
+  reconcilePages();
+}
+
+/**
+ *
+ */
+function showAlarms() {
+  chrome.alarms.getAll((alarms) => {
+    console.log(alarms);
+    const { recurring, oneOff } = alarms.reduce(
+      (acc, item) => {
+        item.periodInMinutes
+          ? acc["recurring"].push(item)
+          : acc["oneOff"].push(item);
+        return acc;
+      },
+      { recurring: [], oneOff: [] }
+    );
+    document.getElementById(
+      "recurring-alarms-list"
+    ).innerHTML = ""
+      document.getElementById("oneOff-alarms-list").innerHTML = "";
+
+
+    chrome.storage.local.get(["alarmNotes"], ({ alarmNotes = {} }) => {
+      recurring.forEach((r) => {
+        document.getElementById(
+          "recurring-alarms-list"
+        ).innerHTML += `<div><div>
+      <p>title: ${r.name} </p>
+      <p>time:  ${
+        "Everyday " +
+        (new Date(r.scheduledTime).getHours() +
+          ":" +
+          new Date(r.scheduledTime).getMinutes())
+      } </p>
+      <p>notes: ${alarmNotes[r.name].notes}
+      </div><div><button data-delete-alarm="${
+        r.name
+      }">Delete</button> <button>Edit</button></div></div>`;
+      });
+      oneOff.forEach((r) => {
+        document.getElementById("oneOff-alarms-list").innerHTML += `<div><div>
+<p>title: ${r.name} </p>
+<p>time: ${new Date(r.scheduledTime)} </p>
+<p>notes: ${alarmNotes[r.name].notes}
+</div><div><button data-delete-alarm="${
+  r.name
+}">Delete</button> <button>Edit</button></div></div>`;
+      });
+    });
+  });
 }
