@@ -64,22 +64,26 @@ async function saveToSync(e) {
     },
   }); //+[...document.getElementsByTagName('style')].map(s=>s.outerHTML)
 }
+appUtils.loadFromLocal(["ui-theme"]).then((data) => {
+  document.body.setAttribute("data-theme", data["ui-theme"] || "dark");
+});
 
 document.addEventListener("DOMContentLoaded", () => {
   appNavigator.init();
+
   //get all pages
   reconcilePages();
 
-  document
-    .getElementById("dark-mode-toggle")
-    .addEventListener("click", () =>
-      document.body.setAttribute("data-theme", "dark")
-    );
+  document.getElementById("dark-mode-toggle")?.addEventListener("click", () => {
+    document.body.setAttribute("data-theme", "dark");
+    appUtils.saveToLocal({ "ui-theme": "dark" });
+  });
   document
     .getElementById("light-mode-toggle")
-    .addEventListener("click", () =>
-      document.body.setAttribute("data-theme", "light")
-    );
+    ?.addEventListener("click", () => {
+      document.body.setAttribute("data-theme", "light");
+      appUtils.saveToLocal({ "ui-theme": "light" });
+    });
 
   // blur keyup paste
 
@@ -95,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
     alarmFormDialog?.showModal?.();
   });
   alarmFormDialog?.addEventListener("close", async (e) => {
-    console.log(e.target.returnValue);
+    // console.log(e.target.returnValue);
     if (e.target.returnValue === "default") {
       const formData = new FormData(e.target.firstElementChild);
       const formValues = {};
@@ -128,7 +132,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const firstOccurence = (
           appUtils.minutesOfDay(new Date()) >
           appUtils.minutesOfDay(todayAtGivenTime)
-            ? todayAtGivenTime.setDate(new Date().getDate() + 1)
+            ? (() => {
+                todayAtGivenTime.setDate(new Date().getDate() + 1);
+                return todayAtGivenTime; //tomorrow at given time
+              })()
             : todayAtGivenTime
         ).getTime();
         chrome.alarms.create(alarmId, {
@@ -144,7 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const deleteAlarmId = e.target.getAttribute("data-delete-alarm");
     if (deleteAlarmId) {
       chrome.alarms.clear(deleteAlarmId);
-      showAlarms()
+      showAlarms();
     }
   });
   // document.getElementById("alarm-form").onsubmit = (e) => {
@@ -258,7 +265,7 @@ async function reconcilePages(options = {}) {
 
 function addButton({ id, title }, parentEl, isEditing) {
   const li = document.createElement("li");
-  li.classList.add("page-title")
+  li.classList.add("page-title");
   if (isEditing) {
     li.classList.add("editing");
   }
@@ -302,12 +309,12 @@ function addButton({ id, title }, parentEl, isEditing) {
       onChangeComplete(e);
     }
   };
-  
+
   const button = document.createElement("button");
   button.textContent = title;
   li.firstElementChild?.firstElementChild?.appendChild(button);
-  
-  button.classList.add("u-full-width")
+
+  button.classList.add("u-full-width");
   button.ondblclick = (e) => li.classList.add("editing");
   button.onclick = function (e) {
     showPage(e.target?.closest("li")?.getAttribute("data-id"));
@@ -365,11 +372,8 @@ function showAlarms() {
       },
       { recurring: [], oneOff: [] }
     );
-    document.getElementById(
-      "recurring-alarms-list"
-    ).innerHTML = ""
-      document.getElementById("oneOff-alarms-list").innerHTML = "";
-
+    document.getElementById("recurring-alarms-list").innerHTML = "";
+    document.getElementById("oneOff-alarms-list").innerHTML = "";
 
     chrome.storage.local.get(["alarmNotes"], ({ alarmNotes = {} }) => {
       recurring.forEach((r) => {
@@ -389,13 +393,15 @@ function showAlarms() {
       }">Delete</button> <button>Edit</button></div></div>`;
       });
       oneOff.forEach((r) => {
-        document.getElementById("oneOff-alarms-list").innerHTML += `<div class="alarm-card"><div>
+        document.getElementById(
+          "oneOff-alarms-list"
+        ).innerHTML += `<div class="alarm-card"><div>
 <p>title: ${r.name} </p>
 <p>time: ${new Date(r.scheduledTime)} </p>
 <p>notes: ${alarmNotes[r.name].notes}
 </div><div><button data-delete-alarm="${
-  r.name
-}">Delete</button> <button>Edit</button></div></div>`;
+          r.name
+        }">Delete</button> <button>Edit</button></div></div>`;
       });
     });
   });

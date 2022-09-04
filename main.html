@@ -1133,10 +1133,19 @@ there.
         background-color: rgba(0,0,0,0.7);
       }
 
+      #alarm-dialog{
+        background-color: #fff;
+      }
+
+      [data-theme="dark"] #alarm-dialog{
+        background-color: #000;
+      }
+
       .alarm-card{
         padding:1rem;
         border: 1px solid;
         border-radius: 6px;
+        margin-bottom: 1rem;
       }
     </style>
   </head>
@@ -1230,7 +1239,7 @@ there.
 
     <dialog id="alarm-dialog">
       <form method="dialog" id="alarm-form">
-        <input type="text" name="name" placeholder="Enter name of alarm" />
+        <input type="text" name="name" placeholder="Enter name of alarm"  required/>
         <br />
         <input type="radio" value="0" id="isRecurring--false" name="isRecurring" checked />
         <label for="isRecurring--false">
@@ -1253,7 +1262,7 @@ there.
         </label>
 <br />
         <label for="alarm-notes-entry">Notes</label>
-        <textarea id="alarm-notes-entry" placeholder="Enter notes" name="notes" style="width: 100%;"> </textarea>
+        <textarea id="alarm-notes-entry" required placeholder="Enter notes" name="notes" style="width: 100%;"> </textarea>
 <br />
 
         <button  value="cancel" id="cancel-alarm-form">Cancel</button>
