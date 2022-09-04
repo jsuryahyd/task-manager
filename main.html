@@ -1132,6 +1132,12 @@ there.
       #alarm-dialog::backdrop{
         background-color: rgba(0,0,0,0.7);
       }
+
+      .alarm-card{
+        padding:1rem;
+        border: 1px solid;
+        border-radius: 6px;
+      }
     </style>
   </head>
   <body data-theme="dark">
@@ -1153,19 +1159,20 @@ there.
                   <button>Page 1</button>
                 </li>
               </template>
-              <li><button id="add-page-btn">+ Add Page</button></li>
+              <li><button id="add-page-btn" class="u-full-width">+ Add Page</button></li>
             </ul>
           </li>
           <li class="main-list-item">
             <div>Settings</div>
             <div id="settings">
-              <button style="margin-right: 2rem" id="downloadContent">
+              <button id="alarms-page-goto" class="u-full-width" data-route-goto="alarms">
+                Alarms
+              </button>
+              <br />
+              <button style="margin-right: 2rem" id="downloadContent" >
                 Download
               </button>
               <button>Upload</button>
-              <button id="alarms-page-goto" data-route-goto="alarms">
-                Alarms
-              </button>
             </div>
           </li>
           <li></li>
@@ -1183,7 +1190,7 @@ there.
         </div>
 
         <div id="alarms-page" data-route="alarms">
-          <button class="ml-auto" id="add-alarm-btn">Add Alarm</button>
+          <div><button class="ml-auto" id="add-alarm-btn">Add Alarm</button></div>
           <div id="oneOff-alarms-list"></div>
           <div id="recurring-alarms-list"></div>
         </div>

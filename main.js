@@ -258,7 +258,7 @@ async function reconcilePages(options = {}) {
 
 function addButton({ id, title }, parentEl, isEditing) {
   const li = document.createElement("li");
-  li.classList.add("page-title");
+  li.classList.add("page-title")
   if (isEditing) {
     li.classList.add("editing");
   }
@@ -302,10 +302,12 @@ function addButton({ id, title }, parentEl, isEditing) {
       onChangeComplete(e);
     }
   };
-
+  
   const button = document.createElement("button");
   button.textContent = title;
   li.firstElementChild?.firstElementChild?.appendChild(button);
+  
+  button.classList.add("u-full-width")
   button.ondblclick = (e) => li.classList.add("editing");
   button.onclick = function (e) {
     showPage(e.target?.closest("li")?.getAttribute("data-id"));
@@ -373,7 +375,7 @@ function showAlarms() {
       recurring.forEach((r) => {
         document.getElementById(
           "recurring-alarms-list"
-        ).innerHTML += `<div><div>
+        ).innerHTML += `<div class="alarm-card"><div>
       <p>title: ${r.name} </p>
       <p>time:  ${
         "Everyday " +
@@ -387,7 +389,7 @@ function showAlarms() {
       }">Delete</button> <button>Edit</button></div></div>`;
       });
       oneOff.forEach((r) => {
-        document.getElementById("oneOff-alarms-list").innerHTML += `<div><div>
+        document.getElementById("oneOff-alarms-list").innerHTML += `<div class="alarm-card"><div>
 <p>title: ${r.name} </p>
 <p>time: ${new Date(r.scheduledTime)} </p>
 <p>notes: ${alarmNotes[r.name].notes}
