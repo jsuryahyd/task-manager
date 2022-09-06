@@ -30,7 +30,7 @@ function showExtensionPage() {
     }
   );
 }
-chrome.alarms.clearAll(() => {});
+
 chrome.alarms.onAlarm.addListener(async (alarmInfo) => {
   const alarmNotes =
     (await appUtils.loadFromLocal(["alarmNotes"])).alarmNotes || {};
