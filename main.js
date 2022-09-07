@@ -127,8 +127,8 @@ document.addEventListener("DOMContentLoaded", () => {
       } else if (formValues["alarm-series-at"]) {
         const [hrs, mins] = formValues["alarm-series-at"].split(":");
         const todayAtGivenTime = new Date();
-        todayAtGivenTime.setHours(hrs);
-        todayAtGivenTime.setMinutes(mins);
+        todayAtGivenTime.setHours(+hrs);
+        todayAtGivenTime.setMinutes(+mins);
         const firstOccurence = (
           appUtils.minutesOfDay(new Date()) >
           appUtils.minutesOfDay(todayAtGivenTime)
