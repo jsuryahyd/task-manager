@@ -49,4 +49,36 @@ chrome.alarms.onAlarm.addListener(async (alarmInfo) => {
   chrome.notifications.create("", notificationDetails, (notificationId) => {
     console.log(notificationId);
   });
+
+  chrome.tabs.query(
+    { url: chrome.runtime.getURL("main.html") },
+    async (tabs) => {
+      let page = null;
+      console.log(tabs);
+      //switch to the tab
+      if (tabs.length) {
+        page = tabs[0].id;
+        chrome.tabs.highlight({ tabs: [tabs[0].index] }, () => {});
+      } else {
+        page = await chrome.tabs.create({
+          url: chrome.runtime.getURL("main.html"),
+          selected: true,
+        });
+      }
+
+      setTimeout(() => {
+        chrome.runtime.sendMessage(
+          {
+            msg: "alarm-bajao",
+            alarmInfo, //: { ...alarmInfo, name: alarmInfo.name.split("__")[0] },
+          },
+          (response) => {
+            if (chrome.runtime.lastError)
+              return console.log(chrome.runtime.lastError);
+            console.log(response);
+          }
+        );
+      }, 300);//this will wait until page load, but on page load, the alarm card will not even be added.
+    }
+  );
 });

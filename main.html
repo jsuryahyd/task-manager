@@ -1119,33 +1119,89 @@ there.
         background-color: inherit;
       }
 
-      #isRecurring--true:checked ~ #at-picker{
-        display:none
+      #isRecurring--true:checked ~ #at-picker {
+        display: none;
       }
-      #isRecurring--false:checked ~ #series-picker{
-        display:none
+      #isRecurring--false:checked ~ #series-picker {
+        display: none;
       }
 
-      input[type='radio']+label{
+      input[type="radio"] + label {
         display: inline;
       }
-      #alarm-dialog::backdrop{
-        background-color: rgba(0,0,0,0.7);
+      #alarm-dialog::backdrop {
+        background-color: rgba(0, 0, 0, 0.7);
       }
 
-      #alarm-dialog{
+      #alarm-dialog {
         background-color: #fff;
       }
 
-      [data-theme="dark"] #alarm-dialog{
+      [data-theme="dark"] #alarm-dialog {
         background-color: #000;
       }
 
-      .alarm-card{
-        padding:1rem;
+      .alarm-card {
+        padding: 1rem;
         border: 1px solid;
         border-radius: 6px;
         margin-bottom: 1rem;
+        position: relative;
+      }
+      .alarm-card .alarm-icon {
+        width: 60px;
+        position: absolute;
+        right: 20px;
+        top: 10px;
+        display: none;
+      }
+
+      .alarm-card.ringing .alarm-icon {
+        display: block;
+        animation: jiggle 2s infinite;
+      }
+
+      /* https://www.w3schools.com/howto/howto_css_shake_image.asp */
+      @keyframes jiggle {
+        0% {
+          transform: rotate(0deg);
+        }
+        10% {
+          transform: rotate(-5deg);
+        }
+        20% {
+          transform: rotate(5deg);
+        }
+        30% {
+          transform: rotate(0deg);
+        }
+        40% {
+          transform: rotate(5deg);
+        }
+        50% {
+          transform: rotate(-5deg);
+        }
+        60% {
+          transform: rotate(0deg);
+        }
+        70% {
+          transform: rotate(-5deg);
+        }
+        80% {
+          transform: rotate(5deg);
+        }
+        90% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(-5deg);
+        }
+      }
+
+      #audioPlayer {
+        position: absolute;
+        height: 0;
+        width: 0;
       }
     </style>
   </head>
@@ -1168,17 +1224,25 @@ there.
                   <button>Page 1</button>
                 </li>
               </template>
-              <li><button id="add-page-btn" class="u-full-width">+ Add Page</button></li>
+              <li>
+                <button id="add-page-btn" class="u-full-width">
+                  + Add Page
+                </button>
+              </li>
             </ul>
           </li>
           <li class="main-list-item">
             <div>Settings</div>
             <div id="settings">
-              <button id="alarms-page-goto" class="u-full-width" data-route-goto="alarms">
+              <button
+                id="alarms-page-goto"
+                class="u-full-width"
+                data-route-goto="alarms"
+              >
                 Alarms
               </button>
               <br />
-              <button style="margin-right: 2rem" id="downloadContent" >
+              <button style="margin-right: 2rem" id="downloadContent">
                 Download
               </button>
               <button>Upload</button>
@@ -1199,7 +1263,9 @@ there.
         </div>
 
         <div id="alarms-page" data-route="alarms">
-          <div><button class="ml-auto" id="add-alarm-btn">Add Alarm</button></div>
+          <div>
+            <button class="ml-auto" id="add-alarm-btn">Add Alarm</button>
+          </div>
           <div id="oneOff-alarms-list"></div>
           <div id="recurring-alarms-list"></div>
         </div>
@@ -1239,36 +1305,68 @@ there.
 
     <dialog id="alarm-dialog">
       <form method="dialog" id="alarm-form">
-        <input type="text" name="name" placeholder="Enter name of alarm"  required/>
+        <input
+          type="text"
+          name="title"
+          placeholder="Enter name of alarm"
+          required
+        />
         <br />
-        <input type="radio" value="0" id="isRecurring--false" name="isRecurring" checked />
-        <label for="isRecurring--false">
-          One Time Alarm
-        </label>
-        <input id="isRecurring--true" type="radio" value="1" name="isRecurring" style="margin-left:5rem" />
-        <label for="isRecurring--true">
-        Recurring Alarm
-        </label>
-    
-<br />
+        <input
+          type="radio"
+          value="0"
+          id="isRecurring--false"
+          name="isRecurring"
+          checked
+        />
+        <label for="isRecurring--false"> One Time Alarm </label>
+        <input
+          id="isRecurring--true"
+          type="radio"
+          value="1"
+          name="isRecurring"
+          style="margin-left: 5rem"
+        />
+        <label for="isRecurring--true"> Recurring Alarm </label>
+
+        <br />
         <label id="at-picker">
           Alarm at
-          <input type="datetime-local" name="alarm-at" />
+          <input
+            type="datetime-local"
+            name="alarm-at"
+            pattern="DD-MM-YYYY HH:mm a"
+          />
         </label>
 
         <label id="series-picker">
           Alarm recurring at
           <input type="time" name="alarm-series-at" />
         </label>
-<br />
+        <br />
         <label for="alarm-notes-entry">Notes</label>
-        <textarea id="alarm-notes-entry" required placeholder="Enter notes" name="notes" style="width: 100%;"> </textarea>
-<br />
+        <textarea
+          id="alarm-notes-entry"
+          required
+          placeholder="Enter notes"
+          name="notes"
+          style="width: 100%"
+        >
+        </textarea>
+        <br />
 
-        <button  value="cancel" id="cancel-alarm-form">Cancel</button>
-        <button  value="default" >Submit</button>
+        <button value="cancel" id="cancel-alarm-form">Cancel</button>
+        <button value="default">Submit</button>
       </form>
     </dialog>
+
+    <audio
+      id="audioPlayer"
+      src="assets/sound1.mp3"
+      preload="auto"
+      paused
+      loop
+    ></audio>
   </body>
 
   <!-- <script hash="sha256-qznLcsROx4GACP2dm0UCKCzCG+HiZ1guq6ZZDob/Tng=">

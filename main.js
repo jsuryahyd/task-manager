@@ -112,7 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("enter time");
       }
 
-      const alarmId = formValues.name + "__" + Date.now();
+      const alarmId = formValues.title + "__" + Date.now();
 
       const alarmNotes =
         (await appUtils.loadFromLocal(["alarmNotes"])).alarmNotes || {};
@@ -153,6 +153,13 @@ document.addEventListener("DOMContentLoaded", () => {
       chrome.alarms.clear(deleteAlarmId);
       showAlarms();
     }
+
+    if (e.target?.classList?.contains("alarm-icon")) {
+      // e.target.parentElement.getAttribute('data-id')
+      e.target?.closest("alarm-card")?.classList?.remove("ringing");
+      document.getElementById('audioPlayer')?.pause();
+      showAlarms();
+    }
   });
   // document.getElementById("alarm-form").onsubmit = (e) => {
   //   e.preventDefault();
@@ -163,11 +170,12 @@ document.addEventListener("DOMContentLoaded", () => {
   //   alarmFormDialog?.close?.();
   // };
 
-  // document
-  //   .getElementById("cancel-alarm-form")
-  //   ?.addEventListener("click", () => {
-  //     alarmFormDialog?.close?.();
-  //   });
+  document
+    .getElementById("cancel-alarm-form")
+    ?.addEventListener("click", () => {
+      alarmFormDialog?.firstElementChild.reset();
+      alarmFormDialog?.close?.(); //invalid form doesnot close with default functionality
+    });
 });
 
 async function downloadContent() {
@@ -379,30 +387,52 @@ function showAlarms() {
       recurring.forEach((r) => {
         document.getElementById(
           "recurring-alarms-list"
-        ).innerHTML += `<div class="alarm-card"><div>
-      <p>title: ${r.name} </p>
+        ).innerHTML += `<div class="alarm-card" data-id="${r.name}">
+        <img src="${chrome.runtime.getURL(
+          "./assets/alarm-clock.png"
+        )}" class="alarm-icon"/>
+      <p>title: ${r.name.split("__")[0]} </p>
       <p>time:  ${
         "Everyday " +
         (new Date(r.scheduledTime).getHours() +
           ":" +
           new Date(r.scheduledTime).getMinutes())
       } </p>
-      <p>notes: ${alarmNotes[r.name].notes}
-      </div><div><button data-delete-alarm="${
+      <p>notes: ${alarmNotes[r.name].notes}</p>
+      <div><button data-delete-alarm="${
         r.name
       }">Delete</button> <button>Edit</button></div></div>`;
       });
       oneOff.forEach((r) => {
-        document.getElementById(
-          "oneOff-alarms-list"
-        ).innerHTML += `<div class="alarm-card"><div>
-<p>title: ${r.name} </p>
-<p>time: ${new Date(r.scheduledTime)} </p>
-<p>notes: ${alarmNotes[r.name].notes}
-</div><div><button data-delete-alarm="${
-          r.name
-        }">Delete</button> <button>Edit</button></div></div>`;
+        document.getElementById("oneOff-alarms-list").innerHTML += `
+      <div class="alarm-card" data-id="${r.name}">
+        <img src="${chrome.runtime.getURL(
+          "./assets/alarm-clock.png"
+        )}" class="alarm-icon"/>
+        <p>title: ${r.name.split("__")[0]} </p>
+        <p>time: ${new Date(r.scheduledTime)} </p>
+        <p>notes: ${alarmNotes[r.name].notes}</p>
+      <div><button data-delete-alarm="${
+        r.name
+      }">Delete</button> <button>Edit</button>
+      </div>
+      </div>`;
       });
     });
   });
 }
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  appNavigator.navigate("alarms");
+  if (message.msg === "alarm-bajao") {
+    const card = document.querySelector(
+      '[data-id="' + message.alarmInfo.name + '"]'
+    );
+
+    if (card) {
+      card.classList.add("ringing");
+      sendResponse("Wa kkay");
+      document.getElementById('audioPlayer')?.play();
+    } else console.error("no card with id", message.alarmInfo.name);
+  }
+});
