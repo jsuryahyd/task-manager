@@ -1,9 +1,10 @@
 //global document
 ///<reference path="./chrome.d.ts" />
 import { appUtils } from "./lib/utils.js";
-import { appNavigator } from "./Navigator.js";
+import { appNavigator } from "./lib/Navigator.js";
+import { Accordion } from "./lib/accordion.js";
 async function saveToSync(e) {
-  console.log(e);
+  // console.log(e);
 
   const newlyaddedLine = e.target.querySelector(":last-child");
 
@@ -41,14 +42,14 @@ async function saveToSync(e) {
     currentWindow: true,
   });
   if (tabs.length) {
-    chrome.pageCapture.saveAsMHTML(
-      {
-        tabId: tabs[0]?.id,
-      },
-      (blob) => {
-        console.log(blob);
-      }
-    );
+    // chrome.pageCapture.saveAsMHTML(
+    //   {
+    //     tabId: tabs[0]?.id,
+    //   },
+    //   (blob) => {
+    //     // console.log(blob);
+    //   }
+    // );
   }
   const id = document
     .getElementById("editor-wrapper")
@@ -70,7 +71,8 @@ appUtils.loadFromLocal(["ui-theme"]).then((data) => {
 
 document.addEventListener("DOMContentLoaded", () => {
   appNavigator.init();
-
+  Accordion({ accordionId: "pages" })?.expand();
+  Accordion({accordionId: 'recycle-bin'})
   //get all pages
   reconcilePages();
 
@@ -157,7 +159,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target?.classList?.contains("alarm-icon")) {
       // e.target.parentElement.getAttribute('data-id')
       e.target?.closest("alarm-card")?.classList?.remove("ringing");
-      document.getElementById('audioPlayer')?.pause();
+      document.getElementById("audioPlayer")?.pause();
       showAlarms();
     }
   });
@@ -235,11 +237,13 @@ async function reconcilePages(options = {}) {
       '.page-title[data-id="' + p.id + '"]'
     );
     if (p.deletedOn) {
-      if (existingEditor)
-        existingEditor.parentElement?.removeChild(existingEditor);
-      if (existingButton)
+      if (existingEditor) existingEditor.contentEditable = false;
+      //   existingEditor.parentElement?.removeChild(existingEditor);
+      if (existingButton) {
         existingButton.parentElement?.removeChild(existingButton);
-
+        // document.getElementById('trash-files-buttons-list').
+      }
+      addTrashFileBtn(p);
       return;
     }
 
@@ -247,7 +251,7 @@ async function reconcilePages(options = {}) {
       return;
     }
     const editor = document.createElement("div");
-    editor.contentEditable = "true";
+    editor.contentEditable = p.deletedOn ? "false" : "true";
     editor?.setAttribute("data-page-id", p.id);
     editor.classList.add("editor");
     idx === 0 && editorWrapper?.setAttribute("data-active-page-id", p.id);
@@ -270,6 +274,8 @@ async function reconcilePages(options = {}) {
 
   //update buttons
 }
+
+function renderTrashFiles(p) {}
 
 function addButton({ id, title }, parentEl, isEditing) {
   const li = document.createElement("li");
@@ -338,6 +344,55 @@ function addButton({ id, title }, parentEl, isEditing) {
   });
 }
 
+function addTrashFileBtn(p) {
+  console.log(p);
+
+  const li = document.createElement("li");
+  li.classList.add("page-title");
+  li.setAttribute("data-id", p.id);
+  document
+    .getElementById("trash-files-buttons-list")
+    ?.insertAdjacentElement("afterbegin", li);
+
+  li.innerHTML = `<div class='row'>
+    <div class="nine columns" >
+    
+    </div>
+    <div class="three columns"></div>
+    </div>`;
+
+  // const deleteBtn = document.createElement("button");
+  // deleteBtn.classList.add("delete-page-btn");
+  // deleteBtn.innerHTML = `<img src="assets/delete.png" />`;
+  // deleteBtn.onclick = (e) =>
+  //   deletePage(e.target?.closest("li")?.getAttribute("data-id"));
+  // li.firstElementChild?.firstElementChild?.nextElementSibling?.appendChild(
+  //   deleteBtn
+  // );
+
+
+
+  const button = document.createElement("button");
+  button.textContent = p.title;
+  button.classList.add("u-full-width");
+  li.firstElementChild?.firstElementChild?.appendChild(button);
+  button.ondblclick = (e) => li.classList.add("editing");
+  button.onclick = function (e) {
+    showPage(p.id);
+  };
+
+  button.setAttribute("data-route-goto", "active-editors");
+
+  const restoreButton = document.createElement("button");
+  restoreButton.classList.add("delete-page-btn");
+  restoreButton.innerHTML = `<img src="assets/history.png" />`;
+  restoreButton.onclick = (e) => restorePage(p.id);
+  li.firstElementChild?.firstElementChild?.nextElementSibling?.appendChild(
+    restoreButton
+  );
+
+}
+
 function showPage(id) {
   if (!id) throw "invalid id passed :" + id;
   document
@@ -360,6 +415,16 @@ async function deletePage(id) {
   const pageToBeDeleted = pages.find((p) => p.id === +id);
   if (!pageToBeDeleted) return toastService.show("no such page");
   pageToBeDeleted.deletedOn = Date.now();
+
+  await appUtils.saveToLocal({ pages });
+  reconcilePages();
+}
+
+async function restorePage(id) {
+  const pages = (await appUtils.loadFromLocal(["pages"]))?.pages || [];
+  const pageToBeRestored = pages.find((p) => p.id === +id);
+  if (!pageToBeRestored) return toastService.show("no such page");
+  delete pageToBeRestored.deletedOn;
 
   await appUtils.saveToLocal({ pages });
   reconcilePages();
@@ -432,7 +497,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (card) {
       card.classList.add("ringing");
       sendResponse("Wa kkay");
-      document.getElementById('audioPlayer')?.play();
+      document.getElementById("audioPlayer")?.play();
     } else console.error("no card with id", message.alarmInfo.name);
   }
 });

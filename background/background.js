@@ -49,7 +49,7 @@ chrome.alarms.onAlarm.addListener(async (alarmInfo) => {
   chrome.notifications.create("", notificationDetails, (notificationId) => {
     console.log(notificationId);
   });
-
+  if(Date.now() - alarmInfo.scheduledTime > 5 * 60 * 1000) return; //dont ring alarm, if the scheduledTime is older than 5 mins.(browser/system is opened a lot of time after the scheduled time.) 
   chrome.tabs.query(
     { url: chrome.runtime.getURL("main.html") },
     async (tabs) => {
@@ -78,7 +78,7 @@ chrome.alarms.onAlarm.addListener(async (alarmInfo) => {
             console.log(response);
           }
         );
-      }, 300);//this will wait until page load, but on page load, the alarm card will not even be added.
+      }, 300);//todo: this will wait until page load, but on page load, the alarm card will not even be added.
     }
   );
 });

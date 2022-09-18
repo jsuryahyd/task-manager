@@ -993,6 +993,13 @@ there.
         display: flex;
         flex-direction: column;
       }
+
+      button{
+        text-overflow: ellipsis;
+        overflow: hidden;
+        /* white-space: wrap;
+        word-wrap:break-word; */
+      }
       .header {
         display: flex;
         padding: 0.5rem;
@@ -1022,7 +1029,8 @@ there.
         opacity: 1;
         pointer-events: all;
       }
-      #editor-wrapper {
+      #editor-wrapper,
+      #recycle-bin-page {
         display: flex;
         flex-direction: column;
         flex: 1;
@@ -1203,6 +1211,16 @@ there.
         height: 0;
         width: 0;
       }
+
+      /* accordion */
+      [data-accordion-id] [accordion-body] {
+        overflow: hidden;
+        transition: 0.1s height 0.3s ease-in-out;
+      }
+      [data-accordion-id].collapsed [accordion-body] {
+        height: 0;
+        padding: 0;
+      }
     </style>
   </head>
   <body data-theme="dark">
@@ -1215,9 +1233,9 @@ there.
     <div id="main">
       <aside>
         <ul id="main-list">
-          <li class="main-list-item">
-            <div>Pages</div>
-            <ul id="page-buttons-list">
+          <li class="main-list-item" data-accordion-id="pages">
+            <button accordion-toggle>Pages</button>
+            <ul id="page-buttons-list" accordion-body>
               <template>
                 <li class="page-title" data-id="">
                   <input type="text" value="Page 1" />
@@ -1229,6 +1247,17 @@ there.
                   + Add Page
                 </button>
               </li>
+            </ul>
+          </li>
+          <li class="main-list-item" data-accordion-id="recycle-bin">
+            <button accordion-toggle>Trash</button>
+            <ul id="trash-files-buttons-list" accordion-body>
+              <template>
+                <li class="page-title" data-id="">
+                  <input type="text" value="Page 1" />
+                  <button>Page 1</button>
+                </li>
+              </template>
             </ul>
           </li>
           <li class="main-list-item">
@@ -1269,6 +1298,7 @@ there.
           <div id="oneOff-alarms-list"></div>
           <div id="recurring-alarms-list"></div>
         </div>
+        <div id="recycle-bin-page" data-route="recycle-bin"></div>
       </div>
     </div>
     <footer style="background-color: #ccc">
@@ -1351,8 +1381,7 @@ there.
           placeholder="Enter notes"
           name="notes"
           style="width: 100%"
-        >
-        </textarea>
+        ></textarea>
         <br />
 
         <button value="cancel" id="cancel-alarm-form">Cancel</button>
