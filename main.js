@@ -72,7 +72,7 @@ appUtils.loadFromLocal(["ui-theme"]).then((data) => {
 document.addEventListener("DOMContentLoaded", () => {
   appNavigator.init();
   Accordion({ accordionId: "pages" })?.expand();
-  Accordion({accordionId: 'recycle-bin'})
+  Accordion({ accordionId: "recycle-bin" });
   //get all pages
   reconcilePages();
 
@@ -121,7 +121,6 @@ document.addEventListener("DOMContentLoaded", () => {
       appUtils.saveToLocal({
         alarmNotes: { ...alarmNotes, [alarmId]: { ...formValues } },
       });
-
       if (formValues["alarm-at"]) {
         chrome.alarms.create(alarmId, {
           when: new Date(formValues["alarm-at"]).getTime(),
@@ -152,7 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.body.addEventListener("click", (e) => {
     const deleteAlarmId = e.target.getAttribute("data-delete-alarm");
     if (deleteAlarmId) {
-      chrome.alarms.clear(deleteAlarmId);
+      clearAlarm(deleteAlarmId);
       showAlarms();
     }
 
@@ -370,8 +369,6 @@ function addTrashFileBtn(p) {
   //   deleteBtn
   // );
 
-
-
   const button = document.createElement("button");
   button.textContent = p.title;
   button.classList.add("u-full-width");
@@ -390,7 +387,6 @@ function addTrashFileBtn(p) {
   li.firstElementChild?.firstElementChild?.nextElementSibling?.appendChild(
     restoreButton
   );
-
 }
 
 function showPage(id) {
@@ -435,9 +431,29 @@ async function restorePage(id) {
  */
 function showAlarms() {
   chrome.alarms.getAll((alarms) => {
-    console.log(alarms);
+    // console.log(alarms);
+
+    const recurringListUI = document.getElementById("recurring-alarms-list");
+    const oneOfflistUI = document.getElementById("oneOff-alarms-list");
+    if (!recurringListUI)
+      return console.error(
+        "no element with id - recurring-alarms-list",
+        recurringListUI
+      );
+    if (!oneOfflistUI)
+      return console.error(
+        "no element with id - recurring-alarms-list",
+        oneOfflistUI
+      );
+
+    recurringListUI.innerHTML = "";
+    oneOfflistUI.innerHTML = "";
+
     const { recurring, oneOff } = alarms.reduce(
-      (acc, item) => {
+      (
+        /** @type {{recurring:chrome.alarms.Alarm[],oneOff:chrome.alarms.Alarm[]}} */ acc,
+        item
+      ) => {
         item.periodInMinutes
           ? acc["recurring"].push(item)
           : acc["oneOff"].push(item);
@@ -445,14 +461,12 @@ function showAlarms() {
       },
       { recurring: [], oneOff: [] }
     );
-    document.getElementById("recurring-alarms-list").innerHTML = "";
-    document.getElementById("oneOff-alarms-list").innerHTML = "";
 
     chrome.storage.local.get(["alarmNotes"], ({ alarmNotes = {} }) => {
       recurring.forEach((r) => {
-        document.getElementById(
-          "recurring-alarms-list"
-        ).innerHTML += `<div class="alarm-card" data-id="${r.name}">
+        recurringListUI.innerHTML += `<div class="alarm-card" data-id="${
+          r.name
+        }">
         <img src="${chrome.runtime.getURL(
           "./assets/alarm-clock.png"
         )}" class="alarm-icon"/>
@@ -469,7 +483,7 @@ function showAlarms() {
       }">Delete</button> <button>Edit</button></div></div>`;
       });
       oneOff.forEach((r) => {
-        document.getElementById("oneOff-alarms-list").innerHTML += `
+        oneOfflistUI.innerHTML += `
       <div class="alarm-card" data-id="${r.name}">
         <img src="${chrome.runtime.getURL(
           "./assets/alarm-clock.png"
@@ -497,7 +511,30 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (card) {
       card.classList.add("ringing");
       sendResponse("Wa kkay");
-      document.getElementById("audioPlayer")?.play();
+      /**
+       * @type {HTMLAudioElement}
+       */
+      const audioPlayer = document.getElementById("audioPlayer");
+      audioPlayer?.play();
     } else console.error("no card with id", message.alarmInfo.name);
   }
 });
+
+async function clearAlarm(deleteAlarmId) {
+  chrome.alarms.clear(deleteAlarmId);
+ 
+  chrome.alarms.getAll(async(alarms)=>{
+    const alarmNotes = (await appUtils.loadFromLocal(["alarmNotes"])).alarmNotes || {};
+    // console.log(alarms)
+    const newAlarmNotes = {}
+    //only keep the existing alarms' notes
+    for(let alarm of alarms){
+      if(alarmNotes[alarm.name]){
+        newAlarmNotes[alarm.name] = alarmNotes[alarm.name]
+      }
+    }
+    appUtils.saveToLocal({
+      alarmNotes: newAlarmNotes
+    });
+  })
+}
