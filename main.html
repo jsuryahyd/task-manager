@@ -994,7 +994,7 @@ there.
         flex-direction: column;
       }
 
-      button{
+      button {
         text-overflow: ellipsis;
         overflow: hidden;
         /* white-space: wrap;
@@ -1153,7 +1153,6 @@ there.
         padding: 1rem;
         border: 1px solid;
         border-radius: 6px;
-        margin-bottom: 1rem;
         position: relative;
       }
       .alarm-card .alarm-icon {
@@ -1205,6 +1204,12 @@ there.
           transform: rotate(-5deg);
         }
       }
+      .alarm-list {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-gap: 1rem;
+        /* margin-top:1rem */
+      }
 
       #audioPlayer {
         position: absolute;
@@ -1246,6 +1251,10 @@ there.
                 <button id="add-page-btn" class="u-full-width">
                   + Add Page
                 </button>
+                <br />
+                <button id="add-whiteboard-btn" class="u-full-width">
+                  + Add Whiteboard</button
+                ><!-- rather make whiteboard an element in the page itself-->
               </li>
             </ul>
           </li>
@@ -1295,8 +1304,9 @@ there.
           <div>
             <button class="ml-auto" id="add-alarm-btn">Add Alarm</button>
           </div>
-          <div id="oneOff-alarms-list"></div>
-          <div id="recurring-alarms-list"></div>
+          <div id="oneOff-alarms-list" class="alarm-list"></div>
+          <hr>
+          <div id="recurring-alarms-list" class="alarm-list"></div>
         </div>
         <div id="recycle-bin-page" data-route="recycle-bin"></div>
       </div>

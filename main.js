@@ -3,10 +3,38 @@
 import { appUtils } from "./lib/utils.js";
 import { appNavigator } from "./lib/Navigator.js";
 import { Accordion } from "./lib/accordion.js";
-async function saveToSync(e) {
-  // console.log(e);
+import { AlarmDialog } from "./components/AlarmDialog.js";
 
-  const newlyaddedLine = e.target.querySelector(":last-child");
+function getCaretPosition(editableDiv) {
+  var caretPos = 0,
+    sel,
+    range;
+  if (window.getSelection) {
+    sel = window.getSelection();
+    if (sel.rangeCount) {
+      range = sel.getRangeAt(0);
+      if (range.commonAncestorContainer.parentNode == editableDiv) {
+        caretPos = range.endOffset;
+      }
+    }
+  } else if (document.selection && document.selection.createRange) {
+    range = document.selection.createRange();
+    if (range.parentElement() == editableDiv) {
+      var tempEl = document.createElement("span");
+      editableDiv.insertBefore(tempEl, editableDiv.firstChild);
+      var tempRange = range.duplicate();
+      tempRange.moveToElementText(tempEl);
+      tempRange.setEndPoint("EndToEnd", range);
+      caretPos = tempRange.text.length;
+    }
+  }
+  return caretPos;
+}
+
+async function saveToSync(e) {
+  console.log(e);
+  console.log(getCaretPosition(e.target));
+  const newlyaddedLine = e.target.querySelector("div[data-item-id]:last-child");
 
   if (newlyaddedLine) {
     newlyaddedLine.classList.add("item");
@@ -20,6 +48,66 @@ async function saveToSync(e) {
     extraLine.classList.add("item");
     e.target.appendChild(extraLine);
     extraLine.innerHTML = "<br />";
+  }
+
+  if (
+    e.inputType === "insertText" &&
+    e.target.innerHTML.match(/`(.*?)`/g)?.length
+  ) {
+    // e.target.innerHTML = e.target.innerHTML.replace(
+    //   /`(.*?)`/g,
+    //   "<code>$1</code>"
+    // );
+    /**
+     * @type {HTMLElement[]}
+     */
+    const elements = [e.target];
+    let preventInfinite = 0;
+    while (elements.length) {
+      const current = elements.pop();
+      if (current?.childNodes?.length) {
+        elements.splice(0, 0, ...current?.childNodes);
+      } else {
+        // current.innerText = current?.innerText.replace(
+        //   /`(.*?)`/g,
+        //   "<code>$1</code>"
+        // ); //todo: insert code node at that index.
+      }
+      if (current?.nodeType === 3) {//textnode
+        // current.textContent = current.textContent?.replace(
+        //     /`(.*?)`/g,
+        //     "<code>$1</code>"
+        //   );
+        const matches = current.textContent.match(/`(.*?)`/g) || [];
+        if (!matches.length) {
+          continue;
+        }
+        const originalText = current.textContent;
+        const delimiter = "__*task-master_delimiter*__";
+        const newNodes = current.textContent
+          .replace(/`(.*?)`/g, delimiter)
+          .split(delimiter).map(str=>document.createTextNode(str));
+        const codes = matches.map((match) => {
+          const code = document.createElement("code");
+          code.textContent = match.replace(/(^`|`$)/g, "");
+          return code;
+        });
+        const parent = current.parentElement
+        parent?.removeChild(current);
+        newNodes.forEach((n, idx) => {
+          parent.appendChild(n);
+          parent?.appendChild(codes[idx]);
+        });
+       setTimeout(()=>{
+        parent?.appendChild(document.createTextNode(" "))
+       })
+      }
+      preventInfinite++;
+      if (preventInfinite > Math.pow(10, 5)) {
+        break;
+      }
+    }
+    // console.log(e.target);
   }
 
   // if (newlyaddedLine.innerText.startsWith("- ")) {
@@ -95,64 +183,42 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("add-page-btn")?.addEventListener("click", addPage);
 
+  const alarmDialog = AlarmDialog({
+    dialogId: "alarm-dialog",
+    appUtils,
+    refreshAlarmsInUI: showAlarms,
+  });
   showAlarms();
-  const alarmFormDialog = document.getElementById("alarm-dialog");
-  document.getElementById("add-alarm-btn")?.addEventListener("click", () => {
-    alarmFormDialog?.showModal?.();
-  });
-  alarmFormDialog?.addEventListener("close", async (e) => {
-    // console.log(e.target.returnValue);
-    if (e.target.returnValue === "default") {
-      const formData = new FormData(e.target.firstElementChild);
-      const formValues = {};
-      for (let [name, value] of formData) {
-        formValues[name] = value;
-      }
-      e.target.firstElementChild.reset();
-      if (!formValues["alarm-at"] && !formValues["alarm-series-at"]) {
-        e.preventDefault();
-        alert("enter time");
-      }
+  document
+    .getElementById("add-alarm-btn")
+    ?.addEventListener("click", alarmDialog.showDialog);
 
-      const alarmId = formValues.title + "__" + Date.now();
-
-      const alarmNotes =
-        (await appUtils.loadFromLocal(["alarmNotes"])).alarmNotes || {};
-      appUtils.saveToLocal({
-        alarmNotes: { ...alarmNotes, [alarmId]: { ...formValues } },
-      });
-      if (formValues["alarm-at"]) {
-        chrome.alarms.create(alarmId, {
-          when: new Date(formValues["alarm-at"]).getTime(),
-        });
-      } else if (formValues["alarm-series-at"]) {
-        const [hrs, mins] = formValues["alarm-series-at"].split(":");
-        const todayAtGivenTime = new Date();
-        todayAtGivenTime.setHours(+hrs);
-        todayAtGivenTime.setMinutes(+mins);
-        const firstOccurence = (
-          appUtils.minutesOfDay(new Date()) >
-          appUtils.minutesOfDay(todayAtGivenTime)
-            ? (() => {
-                todayAtGivenTime.setDate(new Date().getDate() + 1);
-                return todayAtGivenTime; //tomorrow at given time
-              })()
-            : todayAtGivenTime
-        ).getTime();
-        chrome.alarms.create(alarmId, {
-          periodInMinutes: 1440, //delay since the first alarm
-          when: firstOccurence, //first alarm
-        });
-      }
-
-      showAlarms();
-    }
-  });
   document.body.addEventListener("click", (e) => {
     const deleteAlarmId = e.target.getAttribute("data-delete-alarm");
     if (deleteAlarmId) {
       clearAlarm(deleteAlarmId);
       showAlarms();
+    }
+
+    const editAlarmId = e.target.getAttribute("data-edit-alarm");
+    if (editAlarmId) {
+      chrome.alarms.get(
+        editAlarmId,
+        async (/** @type {chrome.alarms.Alarm} */ alarmInfo) => {
+          const { alarmNotes } =
+            (await appUtils.loadFromLocal(["alarmNotes"])) || {};
+          const alarmDetails = alarmNotes[editAlarmId];
+          console.log(alarmDetails);
+          const details = {
+            title: alarmDetails.title,
+            isRecurring: alarmDetails.isRecurring,
+            "alarm-at": alarmDetails["alarm-at"],
+            "alarm-series-at": alarmDetails["alarm-series-at"],
+            notes: alarmDetails.notes,
+          };
+          alarmDialog.showDialog({ ...details, editAlarmId });
+        }
+      );
     }
 
     if (e.target?.classList?.contains("alarm-icon")) {
@@ -173,10 +239,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document
     .getElementById("cancel-alarm-form")
-    ?.addEventListener("click", () => {
-      alarmFormDialog?.firstElementChild.reset();
-      alarmFormDialog?.close?.(); //invalid form doesnot close with default functionality
-    });
+    ?.addEventListener("click", alarmDialog.close);
 });
 
 async function downloadContent() {
@@ -253,6 +316,7 @@ async function reconcilePages(options = {}) {
     editor.contentEditable = p.deletedOn ? "false" : "true";
     editor?.setAttribute("data-page-id", p.id);
     editor.classList.add("editor");
+
     idx === 0 && editorWrapper?.setAttribute("data-active-page-id", p.id);
     editorWrapper?.appendChild(editor);
     editor.addEventListener("input", appUtils.debounce(saveToSync, 500));
@@ -271,7 +335,7 @@ async function reconcilePages(options = {}) {
     }
   });
 
-  //update buttons
+  //todo: update buttons
 }
 
 function renderTrashFiles(p) {}
@@ -480,7 +544,9 @@ function showAlarms() {
       <p>notes: ${alarmNotes[r.name].notes}</p>
       <div><button data-delete-alarm="${
         r.name
-      }">Delete</button> <button>Edit</button></div></div>`;
+      }">Delete</button> <button data-edit-alarm="${
+          r.name
+        }">Edit</button></div></div>`;
       });
       oneOff.forEach((r) => {
         oneOfflistUI.innerHTML += `
@@ -522,19 +588,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 async function clearAlarm(deleteAlarmId) {
   chrome.alarms.clear(deleteAlarmId);
- 
-  chrome.alarms.getAll(async(alarms)=>{
-    const alarmNotes = (await appUtils.loadFromLocal(["alarmNotes"])).alarmNotes || {};
+
+  chrome.alarms.getAll(async (alarms) => {
+    const alarmNotes =
+      (await appUtils.loadFromLocal(["alarmNotes"])).alarmNotes || {};
     // console.log(alarms)
-    const newAlarmNotes = {}
+    const newAlarmNotes = {};
     //only keep the existing alarms' notes
-    for(let alarm of alarms){
-      if(alarmNotes[alarm.name]){
-        newAlarmNotes[alarm.name] = alarmNotes[alarm.name]
+    for (let alarm of alarms) {
+      if (alarmNotes[alarm.name]) {
+        newAlarmNotes[alarm.name] = alarmNotes[alarm.name];
       }
     }
     appUtils.saveToLocal({
-      alarmNotes: newAlarmNotes
+      alarmNotes: newAlarmNotes,
     });
-  })
+  });
 }
