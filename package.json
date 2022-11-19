@@ -1,0 +1,26 @@
+{
+  "name": "task-master-chrome-extension",
+  "version": "0.0.5",
+  "description": "",
+  "main": "main.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jsuryahyd/task-manager.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jsuryahyd/task-manager/issues"
+  },
+  "homepage": "https://github.com/jsuryahyd/task-manager#readme",
+  "dependencies": {
+    "blockdom": "^0.9.26",
+    "solid-js": "^1.6.2"
+  }
+}

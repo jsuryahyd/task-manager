@@ -1000,23 +1000,40 @@ there.
         /* white-space: wrap;
         word-wrap:break-word; */
       }
+      .button,
+      button,
+      input[type="submit"],
+      input[type="reset"],
+      input[type="button"] {
+        padding: 0 1rem;
+      }
       .header {
         display: flex;
         padding: 0.5rem;
+        height: 6rem;
       }
       #main {
         display: flex;
         flex: auto;
+        height: calc(100vh - 9rem /*header+footer*/);
+      }
+      footer {
+        height: 3rem;
       }
       aside {
-        width: 15%;
-        min-width: 200px;
+        width: 20%;
+        min-width: 20rem;
+        overflow: auto;
+      }
+      aside > ul {
+        padding: 0;
       }
       #route-outlet {
         display: flex;
         flex-direction: column;
         flex: 1;
         position: relative;
+        margin-left: 1rem;
       }
       #route-outlet .page-style {
         position: absolute;
@@ -1113,7 +1130,10 @@ there.
       #page-buttons-list li.editing input {
         display: block;
       }
-
+      .page-title.active button[data-route-goto] {
+        background-color: white;
+        color: #0fa0ce;
+      }
       .page-title .delete-page-btn {
         width: 100%;
         padding: 0.5rem;
@@ -1305,7 +1325,7 @@ there.
             <button class="ml-auto" id="add-alarm-btn">Add Alarm</button>
           </div>
           <div id="oneOff-alarms-list" class="alarm-list"></div>
-          <hr>
+          <hr />
           <div id="recurring-alarms-list" class="alarm-list"></div>
         </div>
         <div id="recycle-bin-page" data-route="recycle-bin"></div>
@@ -1415,5 +1435,6 @@ there.
 
     document.getElementById("main").addEventListener("change", saveToSync);
   </script> -->
+  <!-- <script src="node_modules\solid-js\dist\dev.js" type="module"></script> -->
   <script src="./main.js" type="module"></script>
 </html>
