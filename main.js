@@ -24,6 +24,7 @@ const [currentPageId, setCurrentPageId] = createSignal(null);
 createEffect(() => {
   currentPageId() && showPage(currentPageId());
 });
+
 function Main(render){
   
   return ()=>html`<div>${component(Child,["cherry-tomato"])}</div>`
@@ -135,6 +136,7 @@ document.addEventListener("DOMContentLoaded",  () => {
   //get all pages
   ( appUtils.loadFromLocal(["pages"])).then(r=>{
     setPages(r?.pages || []);
+    setCurrentPageId(r.pages[0]?.id+"")
   }).catch(e=>{
     console.error(e)
   });
@@ -263,7 +265,7 @@ async function reconcilePages(pages, options = {}) {
   const editorWrapper = document.getElementById("editor-wrapper");
   const buttonsList = document.getElementById("page-buttons-list");
 
-  pages.sort().forEach((p, idx) => {
+  (pages||[]).sort().forEach((p, idx) => {
     const existingEditor = document.querySelector(
       '.editor[data-page-id="' + p.id + '"]'
     );
