@@ -9,9 +9,9 @@ import {
   createEffect,
   createSignal,
 } from "./node_modules/solid-js/dist/dev.js";
-import { component, render } from "./lib/tomato/component.js";
-import { createBlock } from "./node_modules/blockdom/dist/index.js";
-import { html } from "./lib/tomato/html.js";
+// import { component, render } from "./lib/tomato/component.js";
+// import { createBlock } from "./node_modules/blockdom/dist/index.js";
+// import { html } from "./lib/tomato/html.js";
 
 
 const [pages, setPages] = createSignal();
@@ -25,14 +25,14 @@ createEffect(() => {
   currentPageId() && showPage(currentPageId());
 });
 
-function Main(render){
+// function Main(render){
   
-  return ()=>html`<div>${component(Child,["cherry-tomato"])}</div>`
-}
+//   return ()=>html`<div>${component(Child,["cherry-tomato"])}</div>`
+// }
 
-function Child(render){
-  return (name)=>createBlock(`<p>Hello <block-text-0 /></p>`)(name)
-}
+// function Child(render){
+//   return (name)=>createBlock(`<p>Hello <block-text-0 /></p>`)(name)
+// }
 // render(Main,document.body)
 
 function getCaretPosition(editableDiv) {
