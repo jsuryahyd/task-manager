@@ -1246,6 +1246,22 @@ there.
         height: 0;
         padding: 0;
       }
+
+      .editorjs-container{
+        background-color: lightgray;
+      }
+      .editorjs-container .ce-block__content{
+max-width: none;
+background-color: white;
+
+
+      }
+      .ce-block--focused{
+        outline:2px solid #ccc
+      }
+      .ce-block {
+        margin-bottom:0.5rem
+      }
     </style>
   </head>
   <body data-theme="dark">
@@ -1267,16 +1283,22 @@ there.
                   <button>Page 1</button>
                 </li>
               </template>
-              <li>
-                <button id="add-page-btn" class="u-full-width">
-                  + Add Page
-                </button>
-                <br />
-                <button id="add-whiteboard-btn" class="u-full-width">
-                  + Add Whiteboard</button
-                ><!-- rather make whiteboard an element in the page itself-->
-              </li>
             </ul>
+
+            <div class="p-4">
+              <div class="d-flex">
+                <button id="add-page-btn" class="u-full-width">
+                  + Add Simple Editor
+                </button>
+                <button id="add-editorjs-editor" class="u-full-width">
+                  + Add editorjs
+                </button>
+              </div>
+              <br />
+              <button id="add-whiteboard-btn" class="u-full-width">
+                + Add Whiteboard</button
+              ><!-- rather make whiteboard an element in the page itself-->
+            </div>
           </li>
           <li class="main-list-item" data-accordion-id="recycle-bin">
             <button accordion-toggle>Trash</button>
@@ -1436,5 +1458,14 @@ there.
     document.getElementById("main").addEventListener("change", saveToSync);
   </script> -->
   <!-- <script src="node_modules\solid-js\dist\dev.js" type="module"></script> -->
+  <script src="./lib/editorjs/editor.js"></script>
+  <script src="./lib/editorjs/checklist@latest.js"></script>
+  <script src="./lib/editorjs/header@latest.js"></script>
+  <script src="./lib/editorjs/table@latest.js"></script>
+  <script src="./lib/editorjs/nested-list@latest.js"></script>
+  <script src="./lib/editorjs/image@2.6.2.js"></script>
+  <script src="./lib/editorjs/code-mirror.js"></script>
+  <script src="./lib/editorjs/inline-code.js"></script>
+  <script src="./lib/editorjs/code.js"></script>
   <script src="./main.js" type="module"></script>
 </html>

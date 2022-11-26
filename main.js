@@ -4,20 +4,18 @@ import { appUtils } from "./lib/utils.js";
 import { appNavigator } from "./lib/Navigator.js";
 import { Accordion } from "./lib/accordion.js";
 import { AlarmDialog } from "./components/AlarmDialog.js";
-import { replaceWithCodeBlocks } from "./components/Editor.js";
-import {
-  createEffect,
-  createSignal,
-} from "./node_modules/solid-js/dist/dev.js";
+import { replaceWithCodeBlocks } from "./components/SimpleEditor.js";
+import { createEffect, createSignal } from "./lib/solidjs/solid.js";
+import { addEditor } from "./components/editorjsEditor.js";
 // import { component, render } from "./lib/tomato/component.js";
 // import { createBlock } from "./node_modules/blockdom/dist/index.js";
 // import { html } from "./lib/tomato/html.js";
-
 
 const [pages, setPages] = createSignal();
 createEffect(() => {
   (async () => {
     reconcilePages(pages());
+    reconcileSideMenu(pages());
   })();
 });
 const [currentPageId, setCurrentPageId] = createSignal(null);
@@ -26,7 +24,7 @@ createEffect(() => {
 });
 
 // function Main(render){
-  
+
 //   return ()=>html`<div>${component(Child,["cherry-tomato"])}</div>`
 // }
 
@@ -129,17 +127,20 @@ appUtils.loadFromLocal(["ui-theme"]).then((data) => {
   document.body.setAttribute("data-theme", data["ui-theme"] || "dark");
 });
 
-document.addEventListener("DOMContentLoaded",  () => {
+document.addEventListener("DOMContentLoaded", () => {
   appNavigator.init();
   Accordion({ accordionId: "pages" })?.expand();
   Accordion({ accordionId: "recycle-bin" });
   //get all pages
-  ( appUtils.loadFromLocal(["pages"])).then(r=>{
-    setPages(r?.pages || []);
-    setCurrentPageId(r.pages[0]?.id+"")
-  }).catch(e=>{
-    console.error(e)
-  });
+  appUtils
+    .loadFromLocal(["pages"])
+    .then((r) => {
+      setPages(r?.pages || []);
+      setCurrentPageId(r.pages[0]?.id + "");
+    })
+    .catch((e) => {
+      console.error(e);
+    });
 
   document.getElementById("dark-mode-toggle")?.addEventListener("click", () => {
     document.body.setAttribute("data-theme", "dark");
@@ -158,7 +159,15 @@ document.addEventListener("DOMContentLoaded",  () => {
     .getElementById("downloadContent")
     ?.addEventListener("click", downloadContent);
 
-  document.getElementById("add-page-btn")?.addEventListener("click", addPage);
+  document.getElementById("add-page-btn")?.addEventListener("click", () => {
+    addPage();
+  });
+
+  document
+    .getElementById("add-editorjs-editor")
+    ?.addEventListener("click", () => {
+      addPage("editorjs");
+    });
 
   const alarmDialog = AlarmDialog({
     dialogId: "alarm-dialog",
@@ -246,73 +255,89 @@ async function downloadContent() {
   window.URL.revokeObjectURL(url);
 }
 
-async function addPage() {
+async function addPage(editorLib) {
   //add to aside menu
   const parent = document.getElementById("page-buttons-list");
   const numPages = (parent?.children?.length || 1) - 1;
   const id = Date.now();
   const title = `Page ${numPages + 1}`;
   //add to storage
+  const newPage = { id, title, editorLib };
   const pages = (await appUtils.loadFromLocal(["pages"]))?.pages || [];
-  await appUtils.saveToLocal({ pages: [...pages, { id, title }] });
-  setPages([...pages, { id, title,editingTitle:true }]);
-  setCurrentPageId(id + "");
+
+  await appUtils.saveToLocal({ pages: [...pages, newPage] });
+  setPages([...pages, { ...newPage, editingTitle: true }]);
+  requestAnimationFrame(() => {
+    setCurrentPageId(id + "");
+  });
+}
+
+function reconcileSideMenu(pages) {
+  const buttonsList = document.getElementById("page-buttons-list");
+  (pages || []).sort().forEach((p, idx) => {
+    const existingButton = document.querySelector(
+      '#page-buttons-list .page-title[data-id="' + p.id + '"]'
+    );
+    const existingTrashedButton = document.querySelector(
+      '#trash-files-buttons-list .page-title[data-id="' + p.id + '"]'
+    );
+    if (p.deletedOn) {
+      if (existingButton)
+        existingButton.parentElement?.removeChild(existingButton);
+      addTrashFileBtn(p);
+      // document.getElementById('trash-files-buttons-list').
+    } else {
+      addButton(p);
+
+      if (existingTrashedButton)
+        existingTrashedButton.parentElement?.removeChild(existingTrashedButton);
+    }
+  });
 }
 
 async function reconcilePages(pages, options = {}) {
   const { newPage } = options;
 
   const editorWrapper = document.getElementById("editor-wrapper");
-  const buttonsList = document.getElementById("page-buttons-list");
 
-  (pages||[]).sort().forEach((p, idx) => {
+  (pages || []).sort().forEach((p, idx) => {
     const existingEditor = document.querySelector(
       '.editor[data-page-id="' + p.id + '"]'
     );
-    if (p.deletedOn) {
-      const existingButton = document.querySelector(
-        '.page-title[data-id="' + p.id + '"]'
-      );
-      if (existingEditor) existingEditor.contentEditable = false;
-      //   existingEditor.parentElement?.removeChild(existingEditor);
-      if (existingButton) {
-        existingButton.parentElement?.removeChild(existingButton);
-        // document.getElementById('trash-files-buttons-list').
-      }
-      addTrashFileBtn(p);
-    } else {
-      const existingButton = document.querySelector(
-        '#trash-files-buttons-list .page-title[data-id="' + p.id + '"]'
-      );
-      if (existingEditor) existingEditor.contentEditable = true;
-      //   existingEditor.parentElement?.removeChild(existingEditor);
-      if (existingButton) {
-        existingButton.parentElement?.removeChild(existingButton);
-        addButton(p);
-        // document.getElementById('trash-files-buttons-list').
-      }
-      // return;
-    }
 
     if (existingEditor) {
-      return;
+      //todo:update editable status.
+      return (existingEditor.contentEditable = p.deletedOn ? "false" : "true");
     }
+
     const editor = document.createElement("div");
-    editor.contentEditable = p.deletedOn ? "false" : "true";
     editor?.setAttribute("data-page-id", p.id);
     editor.classList.add("editor");
 
     idx === 0 && editorWrapper?.setAttribute("data-active-page-id", p.id);
-    editorWrapper?.appendChild(editor);
-    editor.addEventListener("input", appUtils.debounce(saveToSync, 500));
-    chrome.storage.local.get(["page--" + p.id], (pageObj) => {
-      const pageDetails = pageObj["page--" + p.id];
-      if (!pageDetails)
-        return console.log("no content with id", ["page--" + p.id], pageObj);
-      editor.innerHTML = pageDetails.content || "";
-    });
 
-    addButton(p, buttonsList, p.editingTitle);
+    editorWrapper?.appendChild(editor);
+
+    if (p.editorLib === "editorjs") {
+      chrome.storage.local.get(["page--" + p.id], (pageObj) => {
+        const pageDetails = pageObj["page--" + p.id];
+        if (!pageDetails) {
+          addEditor(editor);
+          return console.log("no content with id", ["page--" + p.id], pageObj);
+        }
+        addEditor(editor, pageDetails.content);
+      });
+      editor.classList.add('editorjs-container')
+    } else if (p.editorLib === "simple-editor" || !p.editorLib) {
+      editor.addEventListener("input", appUtils.debounce(saveToSync, 500));
+      editor.contentEditable = p.deletedOn ? "false" : "true";
+      chrome.storage.local.get(["page--" + p.id], (pageObj) => {
+        const pageDetails = pageObj["page--" + p.id];
+        if (!pageDetails)
+          return console.log("no content with id", ["page--" + p.id], pageObj);
+        editor.innerHTML = pageDetails.content || "";
+      });
+    }
   });
 
   //todo: update buttons
@@ -321,6 +346,10 @@ async function reconcilePages(pages, options = {}) {
 function renderTrashFiles(p) {}
 
 function addButton({ id, title }, parentEl, isEditing) {
+  const existingButton = document.querySelector(
+    '#page-buttons-list .page-title[data-id="' + id + '"]'
+  );
+  if (existingButton) return;
   const li = document.createElement("li");
   li.classList.add("page-title");
   if (isEditing) {
@@ -352,7 +381,7 @@ function addButton({ id, title }, parentEl, isEditing) {
   input.onblur = onChangeComplete;
 
   async function onChangeComplete(e) {
-    if(!e.target.value) return 
+    if (!e.target.value) return;
     const pages = (await appUtils.loadFromLocal(["pages"])).pages;
     const page = pages.find((p) => p.id === id);
     if (page) {
@@ -389,7 +418,10 @@ function addButton({ id, title }, parentEl, isEditing) {
 }
 
 function addTrashFileBtn(p) {
-  console.log(p);
+  const existingButton = document.querySelector(
+    '#trash-files-buttons-list .page-title[data-id="' + p.id + '"]'
+  );
+  if (existingButton) return;
 
   const li = document.createElement("li");
   li.classList.add("page-title");
@@ -441,7 +473,7 @@ function showPage(id) {
     .getElementById("editor-wrapper")
     ?.setAttribute("data-active-page-id", id);
   [...document.getElementsByClassName("editor")].forEach((editor) =>
-    editor.dataset.pageId === id
+    editor.dataset.pageId + "" === id + ""
       ? editor?.classList.add("show")
       : editor.classList.remove("show")
   );
@@ -468,7 +500,7 @@ async function deletePage(id) {
   pageToBeDeleted.deletedOn = Date.now();
 
   await appUtils.saveToLocal({ pages });
-  setPages(pages)
+  setPages(pages);
 }
 
 async function restorePage(id) {
@@ -478,7 +510,7 @@ async function restorePage(id) {
   delete pageToBeRestored.deletedOn;
 
   await appUtils.saveToLocal({ pages });
-  setPages(pages)
+  setPages(pages);
 }
 
 /**
