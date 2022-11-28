@@ -325,7 +325,7 @@ async function reconcilePages(pages, options = {}) {
           addEditor(editor);
           return console.log("no content with id", ["page--" + p.id], pageObj);
         }
-        addEditor(editor, pageDetails.content);
+        addEditor(editor, pageDetails.content,{readOnly:p.deletedOn});
       });
       editor.classList.add('editorjs-container')
     } else if (p.editorLib === "simple-editor" || !p.editorLib) {

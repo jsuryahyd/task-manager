@@ -1,10 +1,16 @@
+import { AlarmBlockTune } from "../lib/editorjs/alarm--tune.js";
 import { appUtils } from "../lib/utils.js";
 
 // import EditorJS from "../lib/editor.js";
 export function addEditor(parent, initialContent, options) {
   document.body.addEventListener("click", (e) => {});
-  window.addEventListener("blur", () => {
+  document.body.addEventListener("blur", () => {
+    const activeEditor = document.querySelector('.editor.show')
+    if(!activeEditor?.querySelector('.codex-editor')){
+return;
+    }
     editor.save().then(async (value) => {
+      // console.log('saving')
       await appUtils.saveToLocal({
         ["page--" + parent.getAttribute("data-page-id")]: {
           content: value,
@@ -16,7 +22,7 @@ export function addEditor(parent, initialContent, options) {
         },
       });
     });
-  });
+  },{capture:true});
   // @ts-ignore
   const editor = new EditorJS({
     holder: parent,
@@ -24,6 +30,7 @@ export function addEditor(parent, initialContent, options) {
       header: {
         class: Header,
         inlineToolbar: true,
+        shortcut:"CTRL+SHIFT+H"
       },
       table: {
         class: Table,
@@ -33,18 +40,24 @@ export function addEditor(parent, initialContent, options) {
         class: Checklist,
         inlineToolbar: true,
       },
-      image: {
-        class: ImageTool,
-      },
+      image: SimpleImage,
+      
       codeMirror: {
         class: CodeMirror,
       },
       list:{
-        class:NestedList
-      }
+        class:NestedList,
+        inlineToolbar:true,
+        shortcut:"CMD+SHIFT+L"
+      },
+      inlineCode:{
+        class: InlineCode,
+      },
+      alarmTune: AlarmBlockTune
     },
+    tunes: ['alarmTune'],
     placeholder: "What are we up to?",
-    readOnly: options?.readOnly,
+    // readOnly: options?.readOnly,does not work because codeMirror does not support readonly
     autoFocus: true,
     data:initialContent
   });

@@ -977,6 +977,29 @@ there.
       .ml-auto {
         margin-left: auto;
       }
+      .flex{
+        display: flex;
+      }
+      .grid{
+        display: grid;
+      }
+      ::-webkit-scrollbar{
+        background-color: transparent;
+        width:8px
+      }
+      ::-webkit-scrollbar-track{
+        background-color: rgba(255,255,255,0.1);
+        
+      }
+      [data-theme="dark"]::-webkit-scrollbar-track{
+        background-color: rgba(0,0,0,0.1);
+        
+      }
+      ::-webkit-scrollbar-thumb{
+        background-color: var(--primary-color);
+        border-radius: 2px;
+        
+      }
     </style>
     <style>
       html,
@@ -986,12 +1009,18 @@ there.
         box-sizing: border-box;
       }
       :root {
-        --main-list-item-bg: #fff;
+        --main-list-item-bg: transparent;
+        --card-bg:white;
       }
       body {
         height: 100vh;
         display: flex;
         flex-direction: column;
+        --primary-bg: #ededed;
+        --primary-color:#252525;
+        color:var(--primar-color);
+        background-color: var(--primary-bg);
+        overflow: hidden
       }
 
       button {
@@ -1064,6 +1093,7 @@ there.
         opacity: 0;
         overflow: auto;
         height: 50px;
+        border-radius: 2px;
       }
       .editor.show {
         z-index: 1;
@@ -1072,9 +1102,15 @@ there.
       }
 
       [data-theme="dark"] {
-        background-color: #000;
-        color: #fff;
-        --main-list-item-bg: #3586b5;
+        --primary-bg:hsl(213deg 26% 15%);
+        --main-list-item-bg: transparent;
+        --card-bg:#000;
+        --primary-color:#ededed;
+        
+        color: var(--primary-color);
+      }
+      [data-theme="dark"] option{
+        color:#000
       }
 
       [data-theme="dark"] * {
@@ -1141,6 +1177,7 @@ there.
       .page-title .delete-page-btn img {
         max-height: 100%;
         width: auto;
+        height: 20px;
       }
 
       #alarms-page {
@@ -1248,19 +1285,40 @@ there.
       }
 
       .editorjs-container{
-        background-color: lightgray;
+        
       }
       .editorjs-container .ce-block__content{
-max-width: none;
-background-color: white;
-
+/* max-width: none; */
+background-color: var(--card-bg);
+padding:0.5rem 1rem;
+border-radius: 6px;
 
       }
-      .ce-block--focused{
+      .ce-toolbar__actions{
+        right:0;
+        opacity:1
+      }
+      .ce-toolbar__actions:hover{
+        color:var(--primary-color)
+      }
+      .ce-block--focused .ce-block__content{
         outline:2px solid #ccc
       }
       .ce-block {
         margin-bottom:0.5rem
+      }
+      [data-theme="dark"] .ce-popover__item:hover{
+        color:#000
+      }
+      [data-theme="dark"] .ce-popover--opened{
+        background-color: var(--primary-bg);
+      }
+
+      [data-theme="dark"] ::selection{
+        color:var(--primary-bg)
+      }
+      .ce-toolbar__plus:hover,.ce-toolbar__settings-btn:hover,.ce-settings__button:hover,.cdx-settings-button:hover{
+        color:#252525;
       }
     </style>
   </head>
@@ -1286,12 +1344,12 @@ background-color: white;
             </ul>
 
             <div class="p-4">
-              <div class="d-flex">
+              <div class="flex">
                 <button id="add-page-btn" class="u-full-width">
-                  + Add Simple Editor
+                  + Simple Editor
                 </button>
                 <button id="add-editorjs-editor" class="u-full-width">
-                  + Add editorjs
+                  + Complex Editor
                 </button>
               </div>
               <br />
@@ -1463,7 +1521,7 @@ background-color: white;
   <script src="./lib/editorjs/header@latest.js"></script>
   <script src="./lib/editorjs/table@latest.js"></script>
   <script src="./lib/editorjs/nested-list@latest.js"></script>
-  <script src="./lib/editorjs/image@2.6.2.js"></script>
+  <script src="./lib/editorjs/simple-image@latest.js"></script>
   <script src="./lib/editorjs/code-mirror.js"></script>
   <script src="./lib/editorjs/inline-code.js"></script>
   <script src="./lib/editorjs/code.js"></script>
