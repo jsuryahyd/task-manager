@@ -977,28 +977,25 @@ there.
       .ml-auto {
         margin-left: auto;
       }
-      .flex{
+      .flex {
         display: flex;
       }
-      .grid{
+      .grid {
         display: grid;
       }
-      ::-webkit-scrollbar{
+      ::-webkit-scrollbar {
         background-color: transparent;
-        width:8px
+        width: 8px;
       }
-      ::-webkit-scrollbar-track{
-        background-color: rgba(255,255,255,0.1);
-        
+      ::-webkit-scrollbar-track {
+        background-color: rgba(255, 255, 255, 0.1);
       }
-      [data-theme="dark"]::-webkit-scrollbar-track{
-        background-color: rgba(0,0,0,0.1);
-        
+      [data-theme="dark"]::-webkit-scrollbar-track {
+        background-color: rgba(0, 0, 0, 0.1);
       }
-      ::-webkit-scrollbar-thumb{
+      ::-webkit-scrollbar-thumb {
         background-color: var(--primary-color);
         border-radius: 2px;
-        
       }
     </style>
     <style>
@@ -1010,17 +1007,17 @@ there.
       }
       :root {
         --main-list-item-bg: transparent;
-        --card-bg:white;
+        --card-bg: white;
       }
       body {
         height: 100vh;
         display: flex;
         flex-direction: column;
         --primary-bg: #ededed;
-        --primary-color:#252525;
-        color:var(--primar-color);
+        --primary-color: #252525;
+        color: var(--primar-color);
         background-color: var(--primary-bg);
-        overflow: hidden
+        overflow: hidden;
       }
 
       button {
@@ -1035,6 +1032,10 @@ there.
       input[type="reset"],
       input[type="button"] {
         padding: 0 1rem;
+      }
+      [data-theme="dark"] button:hover {
+        /* color: var(--primar-color); */
+        background-color: var(--primary-color);
       }
       .header {
         display: flex;
@@ -1102,15 +1103,15 @@ there.
       }
 
       [data-theme="dark"] {
-        --primary-bg:hsl(213deg 26% 15%);
+        --primary-bg: hsl(213deg 26% 15%);
         --main-list-item-bg: transparent;
-        --card-bg:#000;
-        --primary-color:#ededed;
-        
+        --card-bg: #000;
+        --primary-color: #ededed;
+
         color: var(--primary-color);
       }
-      [data-theme="dark"] option{
-        color:#000
+      [data-theme="dark"] option {
+        color: #000;
       }
 
       [data-theme="dark"] * {
@@ -1178,6 +1179,10 @@ there.
         max-height: 100%;
         width: auto;
         height: 20px;
+      }
+      [data-theme="dark"] .page-title .delete-page-btn img {
+        filter: invert(100%) sepia(3%) saturate(764%) hue-rotate(216deg)
+          brightness(118%) contrast(86%); /*turn silver*/
       }
 
       #alarms-page {
@@ -1284,41 +1289,42 @@ there.
         padding: 0;
       }
 
-      .editorjs-container{
-        
+      .editorjs-container {
       }
-      .editorjs-container .ce-block__content{
-/* max-width: none; */
-background-color: var(--card-bg);
-padding:0.5rem 1rem;
-border-radius: 6px;
-
+      .editorjs-container .ce-block__content {
+        /* max-width: none; */
+        background-color: var(--card-bg);
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
       }
-      .ce-toolbar__actions{
-        right:0;
-        opacity:1
+      .ce-toolbar__actions {
+        right: 0;
+        opacity: 1;
       }
-      .ce-toolbar__actions:hover{
-        color:var(--primary-color)
+      .ce-toolbar__actions:hover {
+        color: var(--primary-color);
       }
-      .ce-block--focused .ce-block__content{
-        outline:2px solid #ccc
+      .ce-block--focused .ce-block__content {
+        outline: 2px solid #ccc;
       }
       .ce-block {
-        margin-bottom:0.5rem
+        margin-bottom: 0.5rem;
       }
-      [data-theme="dark"] .ce-popover__item:hover{
-        color:#000
+      [data-theme="dark"] .ce-popover__item:hover {
+        color: #000;
       }
-      [data-theme="dark"] .ce-popover--opened{
+      [data-theme="dark"] .ce-popover--opened {
         background-color: var(--primary-bg);
       }
 
-      [data-theme="dark"] ::selection{
-        color:var(--primary-bg)
+      [data-theme="dark"] ::selection {
+        color: var(--primary-bg);
       }
-      .ce-toolbar__plus:hover,.ce-toolbar__settings-btn:hover,.ce-settings__button:hover,.cdx-settings-button:hover{
-        color:#252525;
+      .ce-toolbar__plus:hover,
+      .ce-toolbar__settings-btn:hover,
+      .ce-settings__button:hover,
+      .cdx-settings-button:hover {
+        color: #252525;
       }
     </style>
   </head>
