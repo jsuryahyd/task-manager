@@ -142,15 +142,13 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error(e);
     });
 
-  document.getElementById("dark-mode-toggle")?.addEventListener("click", () => {
-    document.body.setAttribute("data-theme", "dark");
-    appUtils.saveToLocal({ "ui-theme": "dark" });
-  });
   document
-    .getElementById("light-mode-toggle")
+    .getElementById("color-mode-toggle")
     ?.addEventListener("click", () => {
-      document.body.setAttribute("data-theme", "light");
-      appUtils.saveToLocal({ "ui-theme": "light" });
+      const newMode =
+        document.body.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      document.body.setAttribute("data-theme", newMode);
+      appUtils.saveToLocal({ "ui-theme": newMode });
     });
 
   // blur keyup paste
@@ -173,7 +171,17 @@ document.addEventListener("DOMContentLoaded", () => {
     dialogId: "alarm-dialog",
     appUtils,
     refreshAlarmsInUI: showAlarms,
+    onSuccess: async (formValues, isEdit, e) => {
+      if (!formValues["alarm-at"] && !formValues["alarm-series-at"]) {
+        e?.preventDefault();
+        alert("enter time");
+      }
+
+      appUtils.createOrEditAlarm(formValues, isEdit);
+      showAlarms();
+    },
   });
+  window.alarmDialog = alarmDialog;
   showAlarms();
   document
     .getElementById("add-alarm-btn")
@@ -213,6 +221,14 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("audioPlayer")?.pause();
       showAlarms();
     }
+  });
+
+  document.getElementById("delete-btn")?.addEventListener("click", () => {
+    deletePage(currentPageId());
+  });
+  document.getElementById("restore-btn")?.addEventListener("click", () => {
+    const editorWrapper  = document.getElementById("editor-wrapper");
+    restorePage(editorWrapper?.getAttribute('data-active-page-id'));
   });
   // document.getElementById("alarm-form").onsubmit = (e) => {
   //   e.preventDefault();
@@ -300,7 +316,7 @@ async function reconcilePages(pages, options = {}) {
 
   const editorWrapper = document.getElementById("editor-wrapper");
 
-  (pages || []).sort().forEach((p, idx) => {
+  (pages || []).sort((a,b)=>Number(a.id)-Number(b.id) > 0 ? -1 : 1).forEach((p, idx) => {
     const existingEditor = document.querySelector(
       '.editor[data-page-id="' + p.id + '"]'
     );
@@ -325,9 +341,9 @@ async function reconcilePages(pages, options = {}) {
           addEditor(editor);
           return console.log("no content with id", ["page--" + p.id], pageObj);
         }
-        addEditor(editor, pageDetails.content,{readOnly:p.deletedOn});
+        addEditor(editor, pageDetails.content, { readOnly: p.deletedOn });
       });
-      editor.classList.add('editorjs-container')
+      editor.classList.add("editorjs-container");
     } else if (p.editorLib === "simple-editor" || !p.editorLib) {
       editor.addEventListener("input", appUtils.debounce(saveToSync, 500));
       editor.contentEditable = p.deletedOn ? "false" : "true";
@@ -363,21 +379,21 @@ function addButton({ id, title }, parentEl, isEditing) {
   const input = document.createElement("input");
   input.type = "text";
   input.value = title;
-  li.innerHTML = `<div class='row'>
-  <div class="nine columns" >
-  
-  </div>
-  <div class="three columns"></div>
-  </div>`;
-  const deleteBtn = document.createElement("button");
-  deleteBtn.classList.add("delete-page-btn");
-  deleteBtn.innerHTML = `<img src="assets/delete.png" />`;
-  deleteBtn.onclick = (e) =>
-    deletePage(e.target?.closest("li")?.getAttribute("data-id"));
-  li.firstElementChild?.firstElementChild?.nextElementSibling?.appendChild(
-    deleteBtn
-  );
-  li.firstElementChild?.firstElementChild?.appendChild(input);
+  // li.innerHTML = `<div class='row'>
+  // <div class="nine columns" >
+
+  // </div>
+  // <div class="three columns"></div>
+  // </div>`;
+  // const deleteBtn = document.createElement("button");
+  // deleteBtn.classList.add("delete-page-btn");
+  // deleteBtn.innerHTML = `<img src="assets/delete.png" />`;
+  // deleteBtn.onclick = (e) =>
+  //   deletePage(e.target?.closest("li")?.getAttribute("data-id"));
+  // li.firstElementChild?.firstElementChild?.nextElementSibling?.appendChild(
+  //   deleteBtn
+  // );
+  li.appendChild(input);
   input.onblur = onChangeComplete;
 
   async function onChangeComplete(e) {
@@ -399,7 +415,7 @@ function addButton({ id, title }, parentEl, isEditing) {
 
   const button = document.createElement("button");
   button.textContent = title;
-  li.firstElementChild?.firstElementChild?.appendChild(button);
+  li.appendChild(button);
 
   button.classList.add("u-full-width");
   button.ondblclick = (e) => li.classList.add("editing");
@@ -430,12 +446,12 @@ function addTrashFileBtn(p) {
     .getElementById("trash-files-buttons-list")
     ?.insertAdjacentElement("afterbegin", li);
 
-  li.innerHTML = `<div class='row'>
-    <div class="nine columns" >
-    
-    </div>
-    <div class="three columns"></div>
-    </div>`;
+  // li.innerHTML = `<div class='grid'>
+  //   <div class="btn-container" >
+
+  //   </div>
+  //   <div class="three columns"></div>
+  //   </div>`;
 
   // const deleteBtn = document.createElement("button");
   // deleteBtn.classList.add("delete-page-btn");
@@ -449,7 +465,7 @@ function addTrashFileBtn(p) {
   const button = document.createElement("button");
   button.textContent = p.title;
   button.classList.add("u-full-width");
-  li.firstElementChild?.firstElementChild?.appendChild(button);
+  li.appendChild(button);
   button.ondblclick = (e) => li.classList.add("editing");
   button.onclick = function (e) {
     showPage(p.id);
@@ -457,13 +473,13 @@ function addTrashFileBtn(p) {
 
   button.setAttribute("data-route-goto", "active-editors");
 
-  const restoreButton = document.createElement("button");
-  restoreButton.classList.add("delete-page-btn");
-  restoreButton.innerHTML = `<img src="assets/history.png" />`;
-  restoreButton.onclick = (e) => restorePage(p.id);
-  li.firstElementChild?.firstElementChild?.nextElementSibling?.appendChild(
-    restoreButton
-  );
+  // const restoreButton = document.createElement("button");
+  // restoreButton.classList.add("delete-page-btn");
+  // restoreButton.innerHTML = `<img src="assets/history.png" />`;
+  // restoreButton.onclick = (e) => restorePage(p.id);
+  // li.appendChild(
+  //   restoreButton
+  // );
 }
 
 function showPage(id) {
@@ -487,6 +503,15 @@ function showPage(id) {
       ? el.classList.add("active")
       : el.classList.remove("active");
   });
+
+  const isDeleted = pages().find(p=>p.id === id)?.deletedOn;
+  if(isDeleted){
+    document.getElementById('restore-btn').style.display= "block"
+    document.getElementById('delete-btn').style.display= "none"
+  }else{
+    document.getElementById('delete-btn').style.display= "block"
+    document.getElementById('restore-btn').style.display= "none"
+  }
 }
 
 const toastService = {
@@ -501,6 +526,7 @@ async function deletePage(id) {
 
   await appUtils.saveToLocal({ pages });
   setPages(pages);
+  setCurrentPageId(pages.filter(p=>!p.deletedOn)[0]?.id)
 }
 
 async function restorePage(id) {
@@ -511,6 +537,7 @@ async function restorePage(id) {
 
   await appUtils.saveToLocal({ pages });
   setPages(pages);
+  setCurrentPageId(id)
 }
 
 /**
@@ -600,10 +627,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (card) {
       card.classList.add("ringing");
       sendResponse("Wa kkay");
-      /**
-       * @type {HTMLAudioElement}
-       */
-      const audioPlayer = document.getElementById("audioPlayer");
+      const audioPlayer = /** @type {HTMLAudioElement|null} *typecasting */ (
+        document.getElementById("audioPlayer")
+      );
       audioPlayer?.play();
     } else console.error("no card with id", message.alarmInfo.name);
   }

@@ -25,4 +25,11 @@
 	"icons": {
 		"128": "assets/list.png"
 	}
+// 	"content_scripts": [
+//     {
+        
+//         "css": ["assets/css/pico.min.css"]
+//     }
+// ]
+// "web_accessible_resources":[{"resources":["assets/css/pico.min.css"],"matches":["<all_urls>"]}]
 }

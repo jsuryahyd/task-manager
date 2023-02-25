@@ -1,9 +1,18 @@
+/**
+ * @typedef {import('../lib/utils.js').alarmDetails} alarmDetails
+ * @param {*} param0 
+ * @returns 
+ */
+
+
 export function AlarmDialog({
   dialogId,
   appUtils,
   refreshAlarmsInUI: showAlarms,
+  onSuccess,
 }) {
   let _editAlarmId = null;
+  let successCbs = [];
   const alarmFormDialog = /** @type {HTMLDialogElement|null} */ (
     document.getElementById(dialogId)
   ); //put paranthesis, to cast as the type
@@ -17,7 +26,8 @@ export function AlarmDialog({
       },
     };
   }
-  function showDialog(alarmDetails) {
+  function showDialog(alarmDetails, cb) {
+    successCbs.push(cb);
     if (!alarmDetails.editAlarmId) alarmFormDialog?.showModal?.();
     else {
       _editAlarmId = alarmDetails.editAlarmId;
@@ -38,7 +48,6 @@ export function AlarmDialog({
           '[id="isRecurring--false"]'
         ).checked = true;
       }
-
       alarmFormDialog.querySelector('[name="notes"]').value =
         alarmDetails.notes;
     }
@@ -47,74 +56,14 @@ export function AlarmDialog({
   alarmFormDialog?.addEventListener("close", async (e) => {
     // console.log(e.target.returnValue);
     if (e.target?.returnValue === "default") {
-      const formData = new FormData(
-        /**  @type {HTMLFormElement|null} */ (
-          e.target?.firstElementChild || null
-        )
-      );
-      const formValues = {};
-      for (let [name, value] of formData) {
-        formValues[name] = value;
-      }
-      e.target.firstElementChild.reset();
-      if (!formValues["alarm-at"] && !formValues["alarm-series-at"]) {
-        e.preventDefault();
-        alert("enter time");
-      }
-
-      const alarmId = formValues.title + "__" + Date.now();
-
-      const alarmNotes =
-        (await appUtils.loadFromLocal(["alarmNotes"])).alarmNotes || {};
-      if (_editAlarmId) {
-        appUtils.saveToLocal({
-          alarmNotes: { ...alarmNotes, [_editAlarmId]: { ...formValues } },
-        });
-      } else {
-        appUtils.saveToLocal({
-          alarmNotes: { ...alarmNotes, [alarmId]: { ...formValues } },
-        });
-      }
-      if (formValues["alarm-at"]) {
-        if (_editAlarmId) {
-          chrome.alarms.clear(_editAlarmId);
-          chrome.alarms.create(_editAlarmId, {
-            when: new Date(formValues["alarm-at"]).getTime(),
-          });
-        } else {
-          chrome.alarms.create(alarmId, {
-            when: new Date(formValues["alarm-at"]).getTime(),
-          });
-        }
-      } else if (formValues["alarm-series-at"]) {
-        const [hrs, mins] = formValues["alarm-series-at"].split(":");
-        const todayAtGivenTime = new Date();
-        todayAtGivenTime.setHours(+hrs);
-        todayAtGivenTime.setMinutes(+mins);
-        const firstOccurence = (
-          appUtils.minutesOfDay(new Date()) >
-          appUtils.minutesOfDay(todayAtGivenTime)
-            ? (() => {
-                todayAtGivenTime.setDate(new Date().getDate() + 1);
-                return todayAtGivenTime; //tomorrow at given time
-              })()
-            : todayAtGivenTime
-        ).getTime();
-        if (_editAlarmId) {
-          chrome.alarms.clear(_editAlarmId);
-          chrome.alarms.create(_editAlarmId, {
-            periodInMinutes: 1440, //delay since the first alarm
-            when: firstOccurence, //first alarm
-          });
-        } else
-          chrome.alarms.create(alarmId, {
-            periodInMinutes: 1440, //delay since the first alarm
-            when: firstOccurence, //first alarm
-          });
-      }
-			_editAlarmId = null;
-      showAlarms();
+      const formValues = getFormValues();
+      const alarmId = alarmDetails.title + "__" + Date.now();
+      onSuccess?.({...formValues,alarmId}, !!_editAlarmId,e);
+      successCbs[0]?.({...formValues,alarmId},e.target.returnValue);
+      _editAlarmId = null;
     }
+    e.target.firstElementChild.reset();
+    successCbs.pop();
   });
 
   const close = () => {
@@ -122,7 +71,21 @@ export function AlarmDialog({
     alarmFormDialog?.close?.(); //invalid form doesnot close with default functionality
   };
 
-  return { showDialog, close };
+  function getFormValues() {
+    const formData = new FormData(
+      /**  @type {HTMLFormElement|undefined} */ (
+        alarmFormDialog?.querySelector("form") || undefined
+      )
+    );
+    const formValues =
+      /** @type alarmDetails  */ ({});
+    for (let [name, value] of formData) {
+      formValues[name] = value;
+    }
+    return formValues;
+  }
+
+  return { showDialog, close, utils: { getFormValues } };
 }
 
 // export const alarmDialog = AlarmDialog({dialogId:"alarm-dialog"})
