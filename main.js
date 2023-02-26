@@ -177,7 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("enter time");
       }
 
-      appUtils.createOrEditAlarm(formValues, isEdit);
+      await appUtils.createOrEditAlarm(formValues, isEdit);
       showAlarms();
     },
   });
@@ -337,6 +337,7 @@ async function reconcilePages(pages, options = {}) {
     if (p.editorLib === "editorjs") {
       chrome.storage.local.get(["page--" + p.id], (pageObj) => {
         const pageDetails = pageObj["page--" + p.id];
+        console.log(pageObj,pageDetails)
         if (!pageDetails) {
           addEditor(editor);
           return console.log("no content with id", ["page--" + p.id], pageObj);
@@ -349,6 +350,8 @@ async function reconcilePages(pages, options = {}) {
       editor.contentEditable = p.deletedOn ? "false" : "true";
       chrome.storage.local.get(["page--" + p.id], (pageObj) => {
         const pageDetails = pageObj["page--" + p.id];
+        console.log(pageObj,pageDetails)
+
         if (!pageDetails)
           return console.log("no content with id", ["page--" + p.id], pageObj);
         editor.innerHTML = pageDetails.content || "";
@@ -584,15 +587,15 @@ function showAlarms() {
         <img src="${chrome.runtime.getURL(
           "./assets/alarm-clock.png"
         )}" class="alarm-icon"/>
-      <p>title: ${r.name.split("__")[0]} </p>
-      <p>time:  ${
+      <p>${r.name.split("__")[0]} </p>
+      <p>${
         "Everyday " +
         (new Date(r.scheduledTime).getHours() +
           ":" +
           new Date(r.scheduledTime).getMinutes())
       } </p>
-      <p>notes: ${alarmNotes[r.name].notes}</p>
-      <div><button data-delete-alarm="${
+      <p>Notes: ${alarmNotes[r.name].notes}</p>
+      <div class="grid"><button data-delete-alarm="${
         r.name
       }">Delete</button> <button data-edit-alarm="${
           r.name
@@ -604,10 +607,10 @@ function showAlarms() {
         <img src="${chrome.runtime.getURL(
           "./assets/alarm-clock.png"
         )}" class="alarm-icon"/>
-        <p>title: ${r.name.split("__")[0]} </p>
-        <p>time: ${new Date(r.scheduledTime)} </p>
-        <p>notes: ${alarmNotes[r.name].notes}</p>
-      <div><button data-delete-alarm="${
+        <p>${r.name.split("__")[0]} </p>
+        <p>${new Date(r.scheduledTime)} </p>
+        <p>Notes: ${alarmNotes[r.name].notes}</p>
+      <div class="grid"><button data-delete-alarm="${
         r.name
       }">Delete</button> <button>Edit</button>
       </div>

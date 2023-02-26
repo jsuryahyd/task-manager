@@ -48,6 +48,7 @@
         max-width: 100%;
         max-height: 100%;
       }
+      .w-auto{width: auto;}
     </style>
     <style>
       html,
@@ -545,8 +546,8 @@
         </div>
 
         <div id="alarms-page" data-route="alarms">
-          <div>
-            <button class="ml-auto" id="add-alarm-btn">Add Alarm</button>
+          <div style="display:flex">
+            <button class="ml-1 w-auto" id="add-alarm-btn">Add Alarm</button>
           </div>
           <div id="oneOff-alarms-list" class="alarm-list"></div>
           <hr />
@@ -559,12 +560,13 @@
       <!-- <div class="columns">
         </div> -->
       <div>
-        <a href="https://www.flaticon.com/free-icons/list" title="list icons"
+        <a href="https://www.flaticon.com/free-icons/list" title="list icons" class="secondary"
           >List icons created by Freepik - Flaticon</a
         >
         Sound Effect by
         <a
           href="https://pixabay.com/users/microsammy-22905943/?utm_source=link-attribution&amp;utm_medium=referral&amp;utm_campaign=music&amp;utm_content=8761"
+           class="contrast"
           >Microsammy</a
         >
         from

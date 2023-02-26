@@ -57,7 +57,7 @@ export function AlarmDialog({
     // console.log(e.target.returnValue);
     if (e.target?.returnValue === "default") {
       const formValues = getFormValues();
-      const alarmId = alarmDetails.title + "__" + Date.now();
+      const alarmId = formValues.title + "__" + Date.now();
       onSuccess?.({...formValues,alarmId}, !!_editAlarmId,e);
       successCbs[0]?.({...formValues,alarmId},e.target.returnValue);
       _editAlarmId = null;

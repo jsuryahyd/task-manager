@@ -49,7 +49,7 @@ chrome.alarms.onAlarm.addListener(async (alarmInfo) => {
   chrome.notifications.create("", notificationDetails, (notificationId) => {
     console.log(notificationId);
   });
-  if(Date.now() - alarmInfo.scheduledTime > 5 * 60 * 1000) return; //dont ring alarm, if the scheduledTime is older than 5 mins.(browser/system is opened a lot of time after the scheduled time.) 
+  if (Date.now() - alarmInfo.scheduledTime > 5 * 60 * 1000) return; //dont ring alarm, if the scheduledTime is older than 5 mins.(browser/system is opened a lot of time after the scheduled time.)
   chrome.tabs.query(
     { url: chrome.runtime.getURL("main.html") },
     async (tabs) => {
@@ -78,7 +78,31 @@ chrome.alarms.onAlarm.addListener(async (alarmInfo) => {
             console.log(response);
           }
         );
-      }, 300);//todo: this will wait until page load, but on page load, the alarm card will not even be added.
+      }, 300); //todo: this will wait until page load, but on page load, the alarm card will not even be added.
     }
   );
 });
+
+//read all deleted  items
+async function cleanup() {
+  const { pages = [] } = await appUtils.loadFromLocal(["pages"]);
+  console.log(pages);
+  const toBeRemoved = [];
+  const pagesTobekept = pages.filter((p) => {
+    const toBeKept =
+      !p.deletedOn || Date.now() - p.deletedOn < 30 * 24 * 60 * 60 * 1000;
+    if (!toBeKept) toBeRemoved.push(p.id);
+    return toBeKept;
+  });
+  await Promise.all(
+    toBeRemoved.map((id) => {
+      return chrome.storage.local.remove("page--" + id);
+    })
+  );
+  appUtils.saveToLocal({ pages: pagesTobekept });
+  //todo: download the content before deleting
+  //todo: send message to foreground and show a toast
+  console.log("cleanup cleared " + toBeRemoved.length + " items");
+}
+
+cleanup();
